@@ -36,7 +36,6 @@ namespace Tabletop {
 	}
 
 	public class Player {
-
 		int currentPosition = 0;
 		int color;
 
@@ -76,7 +75,7 @@ namespace Tabletop {
 		public int[] playerOrder;
 
 		public int currentRound = 0;
-		public int currentRoundState = RoundStates.RoundEnded;
+		public int currentRoundState = (int)RoundStates.RoundEnded;
 		public int currentAir = 0;
 
 		static int maxRounds = 3;
@@ -88,13 +87,13 @@ namespace Tabletop {
 
 		public int currentPlayer = 0;
 		public int currentPlayerRoll = 0;
-		public int currentTurnState = TurnStates.TurnEnded;
+		public int currentTurnState = (int)TurnStates.TurnEnded;
 
 		public void startNextRound() {
 		
-			if (currentRound < maxRounds && currentRoundState==RoundStates.RoundEnded) {
+			if (currentRound < maxRounds && currentRoundState==(int)RoundStates.RoundEnded) {
 				currentRound++;
-				currentRoundState = RoundStates.RoundStarted;
+				currentRoundState = (int)RoundStates.RoundStarted;
 				currentAir = maxAir;
 			}
 		
@@ -132,42 +131,42 @@ namespace Tabletop {
 
 		public void startNextTurn() {
 
-			if (currentRoundState == RoundStates.RoundEnded) {
+			if (currentRoundState == (int)RoundStates.RoundEnded) {
 				throw new System.Exception ("Cannot start turn, round ended");
 			}
 
-			if (currentTurnState != TurnStates.TurnEnded) {
+			if (currentTurnState != (int)TurnStates.TurnEnded) {
 				throw new System.Exception ("Cannot start turn, turn not over");
 			}
 
-			if (currentRoundState == RoundStates.RoundStarted) {
+			if (currentRoundState == (int)RoundStates.RoundStarted) {
 
 				currentPlayer = firstPlayer;
-				currentRoundState = RoundStates.RoundInProgress;
+				currentRoundState = (int)RoundStates.RoundInProgress;
 			
-			} else if (currentRoundState == RoundStates.RoundInProgress){
+			} else if (currentRoundState == (int)RoundStates.RoundInProgress){
 
 				currentPlayer++;
 				if (currentPlayer >= players.Count)
 					currentPlayer = 0;
 			}
 
-			currentTurnState = TurnStates.TurnStarted;
+			currentTurnState = (int)TurnStates.TurnStarted;
 
 
 		}
 
 		public void rollForCurrentPlayer() {
-			if (currentTurnState != TurnStates.TurnStarted) {
+			if (currentTurnState != (int)TurnStates.TurnStarted) {
 				throw new System.Exception ("Rolling allowed at start of turn");
 			}
 
-			currentTurnState = TurnStates.PlayerRolling;
+			currentTurnState = (int)TurnStates.PlayerRolling;
 		}
 
 		public void setCurrentPlayerRoll (int rollValue) {
 
-			if (currentTurnState != TurnStates.PlayerRolling) {
+			if (currentTurnState != (int)TurnStates.PlayerRolling) {
 				throw new System.Exception ("Player roll is not pending.");
 			}
 
@@ -176,17 +175,17 @@ namespace Tabletop {
 			}
 
 			currentPlayerRoll = rollValue;
-			currentTurnState = TurnStates.PlayerRolled;
+			currentTurnState = (int)TurnStates.PlayerRolled;
 
 		}
 
 		public void commitMovement(bool willDive) {
 
-			if (currentTurnState != TurnStates.PlayerRolling) {
+			if (currentTurnState != (int)TurnStates.PlayerRolling) {
 				throw new System.Exception ("Player roll is not pending.");
 			}
 
-			currentTurnState = TurnStates.PlayerMoving;
+			currentTurnState = (int)TurnStates.PlayerMoving;
 
 			applyMovementForCurrentPlayer ();
 		}
