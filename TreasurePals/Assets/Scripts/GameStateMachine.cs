@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 
 namespace Tabletop {
@@ -105,6 +106,10 @@ namespace Tabletop {
 		public List<Treasure> treasureCollected = new List<Treasure> ();
 		public List<Treasure> treasureCaptured = new List<Treasure> ();
 
+		public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
+		public Dictionary<PlayerColors,List<Treasure>> treasureCapturedReport;
+		public Dictionary<PlayerColors,int> treasureScoredReport;
+
 		public List<TreasureLocation> treasureLocations = new List<TreasureLocation> ();
 
 		public int currentRound = 0;
@@ -138,6 +143,9 @@ namespace Tabletop {
 
 			foreach (PlayerColors playerColor in selectedPlayers) {
 				spawnPlayer (playerColor);
+
+				treasureCollectedReport.Add (playerColor, new List<Treasure> ());
+				treasureCapturedReport.Add (playerColor, new List<Treasure> ());
 			}
 				
 			generateStartingTreasures ();
@@ -147,6 +155,7 @@ namespace Tabletop {
 
 		private void generateStartingTreasures () {
 
+			// TODO randomly generate values
 			// TODO receive starting treasures from server
 			startingTreasures = new int[4][];
 
@@ -231,10 +240,42 @@ namespace Tabletop {
 				}
 			}
 
+			// reset players
+			foreach (Player player in players) {
+				player.currentPosition = 0;
+			}
+
+			// reset treasure locations
+			for (var t = 0; t < treasureLocations.Count; t++) {
+
+				if (treasureQueue.ElementAt (t)) {
+					treasureLocations [t].treasure = treasureQueue [t];
+				
+				} else {
+					treasureLocations [t].treasure = null;
+				}
+
+			}
 
 		}
 
+		public class ScoreReport {
 
+			PlayerColors color;
+			Dictionary<TreasureType, int> treasureTypeTotals;
+			int totalScore;
+
+			ScoreReport (PlayerColors color) {
+				this.color = color;
+				this.totalScore = 0;
+
+				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
+
+				foreach (TreasureType value in values) {
+					treasureTypeTotals.Add(value,0);
+				}
+			}
+		}
 
 		// GAME CLEANUP
 		//=============
@@ -242,7 +283,61 @@ namespace Tabletop {
 		public void proceedToScoring() {
 
 			// create list of each Player's collected treasures
+			// treasureScoredReport = new Dictionary<PlayerColors,int> ();
+			treasureScoredReport = new List<ScoreReport> ();
 
+			foreach (Player player in players) {
+				
+				treasureScoredReport.Add (player.color, 0);
+			}
+
+			foreach (Treasure treasure in treasureCaptured) {
+
+				PlayerColors color = treasure.collectedByPlayer;
+
+				treasureScoredReport [color] += treasure.value;
+			}
+
+			// account for number of treasures of each type to break ties
+
+			foreach (KeyValuePair item in treasureScoredReport) {
+
+			}
+
+			// sort players scores
+			treasureScoredReport.OrderBy( (item) => { return item. }
+
+		}
+
+		public void generateTreasureReport () {
+
+			treasureCollectedReport = new Dictionary<PlayerColors,List<Treasure>> ();
+			treasureCapturedReport = new Dictionary<PlayerColors,List<Treasure>> ();
+
+			foreach (Treasure treasure in treasureCollected) {
+
+				PlayerColors color = treasure.collectedByPlayer;
+
+				treasureCollectedReport [color].Add (treasure);
+			}
+
+			foreach (Treasure treasure in treasureCaptured) {
+
+				PlayerColors color = treasure.collectedByPlayer;
+
+				treasureCapturedReport [color].Add (treasure);
+			}
+		}
+
+		public void captureTreasures() {
+
+			foreach (Treasure aCollectedTreasure in treasureCollected) {
+
+				treasureCaptured.Add (aCollectedTreasure);
+
+			}
+
+			treasureCollected.Clear ();
 		}
 
 
@@ -258,6 +353,7 @@ namespace Tabletop {
 				throw new System.Exception ("Cannot start next round, round not over");
 			}
 
+			captureTreasures ();
 			cleanupTreasures ();
 
 			if (currentRound < maxRounds) {
