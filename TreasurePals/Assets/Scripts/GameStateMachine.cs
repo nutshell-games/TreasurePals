@@ -248,7 +248,7 @@ namespace Tabletop {
 			// reset treasure locations
 			for (var t = 0; t < treasureLocations.Count; t++) {
 
-				if (treasureQueue.ElementAt (t)) {
+				if (treasureQueue.ElementAt (t) != null) {
 					treasureLocations [t].treasure = treasureQueue [t];
 				
 				} else {
@@ -269,11 +269,11 @@ namespace Tabletop {
 				this.color = color;
 				this.totalScore = 0;
 
-				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
-
-				foreach (TreasureType value in values) {
-					treasureTypeTotals.Add(value,0);
-				}
+//				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
+//
+//				foreach (TreasureType value in values) {
+//					treasureTypeTotals.Add(value,0);
+//				}
 			}
 		}
 
@@ -282,30 +282,30 @@ namespace Tabletop {
 
 		public void proceedToScoring() {
 
-			// create list of each Player's collected treasures
-			// treasureScoredReport = new Dictionary<PlayerColors,int> ();
-			treasureScoredReport = new List<ScoreReport> ();
-
-			foreach (Player player in players) {
-				
-				treasureScoredReport.Add (player.color, 0);
-			}
-
-			foreach (Treasure treasure in treasureCaptured) {
-
-				PlayerColors color = treasure.collectedByPlayer;
-
-				treasureScoredReport [color] += treasure.value;
-			}
+//			// create list of each Player's collected treasures
+//			// treasureScoredReport = new Dictionary<PlayerColors,int> ();
+//			treasureScoredReport = new List<ScoreReport> ();
+//
+//			foreach (Player player in players) {
+//				
+//				treasureScoredReport.Add (player.color, 0);
+//			}
+//
+//			foreach (Treasure treasure in treasureCaptured) {
+//
+//				PlayerColors color = treasure.collectedByPlayer;
+//
+//				treasureScoredReport [color] += treasure.value;
+//			}
 
 			// account for number of treasures of each type to break ties
 
-			foreach (KeyValuePair item in treasureScoredReport) {
-
-			}
-
+//			foreach (KeyValuePair item in treasureScoredReport) {
+//
+//			}
+//
 			// sort players scores
-			treasureScoredReport.OrderBy( (item) => { return item. }
+			//treasureScoredReport.OrderBy( (item) => { return item. }
 
 		}
 
