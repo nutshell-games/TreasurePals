@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class AnimationManager : MonoBehaviour {
 
 	public Animator waterTransistion;
@@ -23,7 +24,7 @@ public class AnimationManager : MonoBehaviour {
 		yield return new WaitForSeconds (1.0f);
 		title.SetTrigger ("AwayUp");
 		selectNumPlayers.SetTrigger ("EnterDown");
- 
+		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.game);
 	}
 	void Update(){
 		//Debug.LogError(title.

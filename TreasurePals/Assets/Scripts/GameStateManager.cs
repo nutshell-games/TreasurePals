@@ -19,20 +19,13 @@ public class GameStateManager : MonoBehaviour {
 		selectedPlayers.Add (PlayerColors.Red);
 		selectedPlayers.Add (PlayerColors.Green);
 		selectedPlayers.Add (PlayerColors.Orange); 
-
+		selectedPlayers.Add (PlayerColors.Blue);
 		stateMachine.setupGameForPlayers (selectedPlayers);
-
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-
-
-		// if trigger start next round
-
-
-		// 
 	
 	}
 }
