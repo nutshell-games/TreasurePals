@@ -6,11 +6,11 @@ using System.Linq;
 
 
 namespace Tabletop {
-
 	public enum PlayerColors {
 		Red, Green, Blue, Yellow, Purple, Orange
 	}
 
+	//A-D tier 1,2,3,4 E is empty treasure
 	public enum TreasureType {
 		A, B, C, D, E
 	}
@@ -33,40 +33,19 @@ namespace Tabletop {
 		TreasureCollected,TreasurePassed
 	}
 
-	public class Treasure {
 
-		public TreasureType type;
-		public int value;
-		public bool isCollected = false;
-		public PlayerColors collectedByPlayer;
 
-		public Treasure (TreasureType type, int value) {
-			this.type = type;
-			this.value = value;
-		}
+	//public class TreasureLocation
+	//{
 
-		public void collect (PlayerColors collectingPlayer) {
+	//	public Player player = null;
+	//	public Treasure treasure = null;
 
-			if (this.isCollected) {
-				throw new System.Exception ("Treasure already collected.");
-			}
+	//	public TreasureLocation()
+	//	{
 
-			this.isCollected = true;
-			this.collectedByPlayer = collectingPlayer;
-		}
-	}
-
-	public class TreasureLocation
-	{
-
-		public Player player = null;
-		public Treasure treasure = null;
-
-		public TreasureLocation()
-		{
-
-		}
-	}
+	//	}
+	//}
 
 	public class Player {
 
