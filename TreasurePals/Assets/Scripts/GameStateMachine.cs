@@ -56,9 +56,21 @@ namespace Tabletop {
 		}
 	}
 
+	public class TreasureLocation
+	{
+
+		public Player player = null;
+		public Treasure treasure = null;
+
+		public TreasureLocation()
+		{
+
+		}
+	}
+
 	public class Player {
 
-		public int currentPosition = -1;
+		public int currentPosition = 0;
 		public PlayerColors color;
 		public bool isDiving = true;
 
@@ -68,6 +80,8 @@ namespace Tabletop {
 		public Player (PlayerColors color) {
 
 			this.color = color;
+			collectedTreasures = new List<Treasure>();
+			capturedTreasures = new List<Treasure>();
 		}
 
 		public void returnToShip() {
@@ -78,13 +92,23 @@ namespace Tabletop {
 		}
 	}
 
-	public class TreasureLocation {
+	public class ScoreReport
+	{
 
-		public Player player = null;
-		public Treasure treasure = null;
+		PlayerColors color;
+		Dictionary<TreasureType, int> treasureTypeTotals;
+		int totalScore;
 
-		public TreasureLocation () {
+		ScoreReport(PlayerColors color)
+		{
+			this.color = color;
+			this.totalScore = 0;
 
+			//				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
+			//
+			//				foreach (TreasureType value in values) {
+			//					treasureTypeTotals.Add(value,0);
+			//				}
 		}
 	}
 
@@ -128,10 +152,14 @@ namespace Tabletop {
 		public int currentPlayerRoll = 0;
 		public int currentPlayerMovement = 0;
 		public TurnStates currentTurnState = TurnStates.TurnEnded;
+		public int lastRoll = 0;
 
 		public StateMachine() {
 
 			players = new List<Player> ();
+			treasureCollectedReport = new Dictionary<PlayerColors, List<Treasure>> ();
+			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
+			treasureScoredReport = new Dictionary<PlayerColors, int>();
 		}
 
 		// GAME SETUP
@@ -220,65 +248,25 @@ namespace Tabletop {
 
 			}
 
-			for (var t=0; t < treasureQueue.Count; t++) {
+			for (var t=0; t < treasureQueue.Count; t++) 
+			{
 				treasureLocations.Add(new TreasureLocation());
+				treasureLocations[t].treasure = treasureQueue[t];
 			}
 
-			if (treasureQueue.Count != treasureLocations.Count) {
+			if (treasureQueue.Count != treasureLocations.Count) 
+			{
 				throw new System.Exception ("treasure queue does not match treasure locations.");
 			}
 
 			Debug.Log( String.Format("Treasure queue: {0}, locations queue: {1}", treasureQueue.Count, treasureLocations.Count) );
 		}
 
-		// Remove all collected treasures from queue
-		public void cleanupTreasures() {
 
-			foreach (Treasure treasure in treasureQueue) {
-				if (treasure.isCollected) {
-					treasureQueue.Remove (treasure);
-				}
-			}
 
-			// reset players
-			foreach (Player player in players) {
-				player.currentPosition = 0;
-			}
 
-			// reset treasure locations
-			for (var t = 0; t < treasureLocations.Count; t++) {
-
-				if (treasureQueue.ElementAt (t) != null) {
-					treasureLocations [t].treasure = treasureQueue [t];
-				
-				} else {
-					treasureLocations [t].treasure = null;
-				}
-
-			}
-
-		}
-
-		public class ScoreReport {
-
-			PlayerColors color;
-			Dictionary<TreasureType, int> treasureTypeTotals;
-			int totalScore;
-
-			ScoreReport (PlayerColors color) {
-				this.color = color;
-				this.totalScore = 0;
-
-//				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
-//
-//				foreach (TreasureType value in values) {
-//					treasureTypeTotals.Add(value,0);
-//				}
-			}
-		}
-
-		// GAME CLEANUP
-		//=============
+// GAME CLEANUP
+//=============
 
 		public void proceedToScoring() {
 
@@ -306,6 +294,42 @@ namespace Tabletop {
 //
 			// sort players scores
 			//treasureScoredReport.OrderBy( (item) => { return item. }
+
+		}
+
+
+		// Remove all collected treasures from queue
+		public void cleanupTreasures()
+		{
+
+			foreach (Treasure treasure in treasureQueue)
+			{
+				if (treasure.isCollected)
+				{
+					treasureQueue.Remove(treasure);
+				}
+			}
+
+			// reset players
+			foreach (Player player in players)
+			{
+				player.currentPosition = 0;
+			}
+
+			// reset treasure locations
+			for (var t = 0; t < treasureLocations.Count; t++)
+			{
+
+				if (treasureQueue.ElementAt(t) != null)
+				{
+					treasureLocations[t].treasure = treasureQueue[t];
+
+				}
+				else {
+					treasureLocations[t].treasure = null;
+				}
+
+			}
 
 		}
 
@@ -341,8 +365,8 @@ namespace Tabletop {
 		}
 
 
-		//	GAME LOOP
-		//===========
+//	GAME LOOP
+//===========
 
 		public void startNextRound() {
 
@@ -360,8 +384,11 @@ namespace Tabletop {
 				currentRound++;
 				currentRoundState = RoundStates.RoundStarted;
 				currentAir = maxAir;
+				Debug.Log(String.Format("Round started: {0} roundState {1} maxAir {2}",
+				                        currentRound,currentRoundState,currentAir));
 
 			} else {
+				Debug.Log("all rounds over");
 				proceedToScoring ();
 			}
 
@@ -370,11 +397,12 @@ namespace Tabletop {
 
 		public void startNextTurn() {
 
+			Debug.Log("startNextTurn turnState:" + currentTurnState + " roundState: " + currentRoundState);
+
 			if (currentRoundState == RoundStates.RoundEnded) {
 				throw new System.Exception ("Cannot start turn, round ended");
-			}
-
-			if (currentTurnState != TurnStates.TurnEnded) {
+			} 
+			else if (currentTurnState != TurnStates.TurnEnded) {
 				throw new System.Exception ("Cannot start turn, turn not over");
 			}
 
@@ -390,33 +418,64 @@ namespace Tabletop {
 					currentPlayerIndex = 0;
 			}
 
+			currentPlayer = players[currentPlayerIndex];
 			currentTurnState = TurnStates.TurnStarted;
 
-
+			Debug.Log(String.Format("currentPlayerIndex: {0}, currentPlayer:{1} position:{2} roundState: {3} turnState:{4}",
+			                        currentPlayerIndex, currentPlayer.color, currentPlayer.currentPosition, currentRoundState, currentTurnState));
 		}
+
+		public void endTurn()
+		{
+
+			if (currentTurnState != TurnStates.TreasurePassed &&
+				currentTurnState != TurnStates.TreasureCollected &&
+				currentTurnState != TurnStates.TreasureUnavailable)
+			{
+				throw new System.Exception("Player has not resolved treasure collection.");
+			}
+
+			currentTurnState = TurnStates.TurnEnded;
+
+			Debug.Log("Turn over " + currentPlayer.color);
+		}
+
+// ROLLING
+//========
 
 		public void rollForCurrentPlayer() {
+
+			Debug.Log("rollForCurrentPlayer "+currentTurnState);
+
 			if (currentTurnState != TurnStates.TurnStarted) {
-				throw new System.Exception ("Rolling allowed at start of turn");
+				throw new System.Exception ("Rolling only allowed at start of turn");
 			}
 
+			lastRoll = getRandomRollValue();
 			currentTurnState = TurnStates.PlayerRolling;
+
+			Debug.Log(String.Format("currentPlayerRoll: {0} roundState: {1} turnState:{2}",
+			                        lastRoll, currentRoundState, currentTurnState));
 		}
 
-		public bool getCurrentPlayerDirection () {
 
-			return currentPlayer.isDiving;
+		T getDiceRoll<T>(List<T> diceValues)
+		{
+			var rand = new System.Random();
+			var index = rand.Next(0, diceValues.Count);
+			var item = diceValues[index];
+
+			return item;
 		}
 
-		public bool returnCurrentPlayerToShip () {
+		public int getRandomRollValue()
+		{
+			List<int> diceValues = new List<int>{ 1, 2, 3, 1, 2, 3 };
 
-			if (currentPlayer.isDiving) {
-				currentPlayer.returnToShip ();
+			int roll1 = getDiceRoll<int>(diceValues);
+			int roll2 = getDiceRoll<int>(diceValues);
 
-				return true;
-			} else {
-				return false;
-			}
+			return roll1 + roll2;
 		}
 
 		public void setCurrentPlayerRoll (int rollValue) {
@@ -433,79 +492,144 @@ namespace Tabletop {
 			currentPlayerMovement =  Math.Max(currentPlayerRoll - currentPlayer.collectedTreasures.Count, 0);
 			currentTurnState = TurnStates.PlayerRolled;
 
+			Debug.Log(String.Format("after Roll, currentPlayerRoll: {0} playerMovement: {1} turnState:{2}",
+			                        lastRoll, currentPlayerMovement, currentTurnState));
+		}
+
+// MOVEMENT
+//========
+
+		public bool isCurrentPlayerDiving()
+		{
+
+			return currentPlayer.isDiving;
+		}
+
+		public bool directCurrentPlayerToShip()
+		{
+
+			if (currentPlayer.isDiving)
+			{
+				currentPlayer.returnToShip();
+
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 
 		public void commitMovement() {
 
-			if (currentTurnState != TurnStates.PlayerRolling) {
-				throw new System.Exception ("Player roll is not pending.");
+			if (currentTurnState != TurnStates.PlayerRolled) {
+				throw new System.Exception ("Player roll has not rolled for movement.");
 			}
 
-			if (currentTurnState != TurnStates.PlayerRolling) {
-				throw new System.Exception ("Player roll is not pending.");
-			}
+			//if (currentTurnState != TurnStates.PlayerRolling) {
+			//	throw new System.Exception ("Player roll is not pending.");
+			//}
 
 			currentTurnState = TurnStates.PlayerMoving;
 
-			if (currentPlayerMovement > 0) {
+			// if player can move at all
+			if (currentPlayerMovement > 0) 
+			{
 				applyMovementForCurrentPlayer (currentPlayerMovement);
 				currentTurnState = TurnStates.PlayerMoved;
 
 				if (getTreasureAtCurrentPlayerLocation ()) {
 					currentTurnState = TurnStates.TreasureAvailable;
 				} else {
-
+					currentTurnState = TurnStates.TreasureUnavailable;
 				}
+
 			} else {
 				currentTurnState = TurnStates.PlayerMoved;
 			}
 
+			Debug.Log(String.Format("turnState after movement: {0}", currentTurnState));
 		}
 
-		private int[] applyMovementForCurrentPlayer (int distanceToMove) {
+		private void applyMovementForCurrentPlayer (int distanceToMove) {
+
+			Debug.Log("applyMovementForCurrentPlayer "+ currentPlayer.color +" currentPosition: "+currentPlayer.currentPosition+" distance:" + distanceToMove);
 
 			// return array of movements
-			int[] movementHistory = new int[distanceToMove];
-			int historyIndex = 0;
+			//int[] movementHistory = new int[distanceToMove];
+			//int historyIndex = 0;
 
-			movementHistory [historyIndex] = currentPlayer.currentPosition;
+			//movementHistory [historyIndex] = currentPlayer.currentPosition;
 
 			while (distanceToMove > 0) {
 
+				Debug.Log("distance to move: " + distanceToMove);
 				// find next empty location
 				bool locatedNextEmptyLocation = false;
 
 				while (locatedNextEmptyLocation == false) {
 
-					currentPlayer.currentPosition++;
+					if (currentPlayer.isDiving)
+					{
+						currentPlayer.currentPosition+=1;
+					}
+					else
+					{
+						currentPlayer.currentPosition-=1;
+					}
+
+					Debug.Log("new position: " + currentPlayer.currentPosition);
+
+					if (currentPlayer.currentPosition >= treasureLocations.Count)
+					{
+						// TODO handle reached end of treasure locations
+						distanceToMove = 0;
+					}
+
+					Debug.Log("currentPlayer position: " + currentPlayer.currentPosition);
+
+					TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 					// skip over location occupied by player
 					if (treasureLocations [currentPlayer.currentPosition].player==null) {
 
 						// found empty location
-						historyIndex++;
-						movementHistory [historyIndex] = currentPlayer.currentPosition;
+						//movementHistory [historyIndex] = currentPlayer.currentPosition;
+
+						//historyIndex++;
 						locatedNextEmptyLocation = true;
 
+						currentLocation.player = currentPlayer;
+
+						Debug.Log("found next empty location: " + currentPlayer.currentPosition);
 					} 
 
-					// TODO handle reached end of treasure locations
+
 				}
 
+				// counted 1 movement
 				distanceToMove--;
 			}
 
-			return movementHistory;
+			//return movementHistory;
 		}
+
+
+// TREASURE SELECTION
+//===================
 
 		public bool getTreasureAtCurrentPlayerLocation () {
 
 			TreasureLocation currentLocation = treasureLocations [currentPlayer.currentPosition];
 
-			if (currentLocation.treasure != null) {
-				return true;
-			} else {
+			Debug.Log(String.Format("treasure at location {0}: {1}, {2}",
+			                        currentPlayer.currentPosition,
+			                        currentLocation.treasure.type,
+			                        currentLocation.treasure.value));
+
+			if (currentLocation.treasure == null) {
 				return false;
+			} else {
+				return true;
 			}
 		}
 
@@ -516,18 +640,27 @@ namespace Tabletop {
 				throw new System.Exception ("No treasure to collect at this location");
 			}
 
-			if (willCollectTreasure) {
-				TreasureLocation currentLocation = treasureLocations [currentPlayer.currentPosition];
+			if (willCollectTreasure)
+			{
+				Debug.Log("collecting treasure");
+				TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 				// player collects treasure
 				Treasure currentTreasure = currentLocation.treasure;
-				currentTreasure.collect (currentPlayer.color);
-				currentPlayer.collectedTreasures.Add (currentTreasure);
+				currentTreasure.collect(currentPlayer.color);
+				currentPlayer.collectedTreasures.Add(currentTreasure);
 
-				treasureCollected.Add (currentTreasure);
+				treasureCollected.Add(currentTreasure);
 
 				// clear treasure at location
 				currentLocation.treasure = null;
+
+				currentTurnState = TurnStates.TreasureCollected;
+			}
+			else 
+			{
+				Debug.Log("declining treasure");
+				currentTurnState = TurnStates.TreasurePassed;
 			}
 		}
 
