@@ -2,14 +2,14 @@
 using System.Collections;
 
 namespace Tabletop{
-	[AddComponentMenu("TreasurePals/TreasureLocation")]
-	public class TreasureLocation : MonoBehaviour {
+	//[AddComponentMenu("TreasurePals/TreasureLocation")]
+	//public class TreasureLocation : MonoBehaviour {
 
-		public Player player = null;
-		public Treasure treasure = null;
+	//	public Player player = null;
+	//	public Treasure treasure = null;
 
-		public TreasureLocation () {
+	//	public TreasureLocation () {
 
-		}
-	}
+	//	}
+	//}
 }
