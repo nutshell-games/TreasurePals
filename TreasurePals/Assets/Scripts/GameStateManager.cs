@@ -5,8 +5,9 @@ using System;
 using Tabletop;
 
 public class GameStateManager : MonoBehaviour {
+	public static GameStateManager instance;
 
-	StateMachine stateMachine;
+	public StateMachine stateMachine;
 
 	// Use this for initialization
 	void Start () {
@@ -14,7 +15,10 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	void Awake() {
-
+		if (instance == null) {
+			instance = this;
+		} else
+			Destroy (this);
 		stateMachine = new StateMachine ();
 
 		List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
@@ -23,9 +27,9 @@ public class GameStateManager : MonoBehaviour {
 		selectedPlayers.Add (PlayerColors.Orange); 
 		selectedPlayers.Add (PlayerColors.Blue);
 		stateMachine.setupGameForPlayers (selectedPlayers);
-
+		TreasureManager.instance.InitialPrefabPlacement ();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 

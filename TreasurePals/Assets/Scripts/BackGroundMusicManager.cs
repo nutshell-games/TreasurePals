@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using System;
 public class BackGroundMusicManager : MonoBehaviour {
 	public enum BGMType{title =0, setting, game};
 	public static BackGroundMusicManager instance;
@@ -17,7 +17,6 @@ public class BackGroundMusicManager : MonoBehaviour {
 
 	void Awake(){
 		if (instance == null) {
-			s = GetComponent<AudioSource> ();
 			instance = this;
 		} else
 			Destroy (this);
@@ -37,5 +36,7 @@ public class BackGroundMusicManager : MonoBehaviour {
 	}
 
 	public void SetBGM(string type){
+		BGMType parsed_enum = (BGMType)System.Enum.Parse( typeof( BGMType ), type );
+		SetBGM (parsed_enum);
 	}
 }

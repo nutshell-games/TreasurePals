@@ -2,8 +2,7 @@
 using System.Collections;
 
 namespace Tabletop{
-	[AddComponentMenu("TreasurePals/Treasure")]
-	public class Treasure : MonoBehaviour  {
+	public class Treasure {
 
 		public TreasureType type;
 		public int value;

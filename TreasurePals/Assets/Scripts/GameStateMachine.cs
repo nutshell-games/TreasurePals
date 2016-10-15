@@ -566,7 +566,6 @@ namespace Tabletop {
 
 					Debug.Log("currentPlayer position: " + currentPlayer.currentPosition);
 
-					TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 					// skip over location occupied by player
 					if (treasureLocations [currentPlayer.currentPosition].player==null) {
@@ -577,7 +576,6 @@ namespace Tabletop {
 						//historyIndex++;
 						locatedNextEmptyLocation = true;
 
-						currentLocation.player = currentPlayer;
 
 						Debug.Log("found next empty location: " + currentPlayer.currentPosition);
 					} 
@@ -589,6 +587,8 @@ namespace Tabletop {
 				distanceToMove--;
 			}
 
+			TreasureLocation locationAfterMovement = treasureLocations[currentPlayer.currentPosition];
+			locationAfterMovement.player = currentPlayer;
 			//return movementHistory;
 		}
 
