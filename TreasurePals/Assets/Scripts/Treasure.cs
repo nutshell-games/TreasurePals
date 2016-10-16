@@ -2,9 +2,9 @@
 using System.Collections;
 
 namespace Tabletop{
-	//[AddComponentMenu("TreasurePals/Treasure")]
-	//public class Treasure : MonoBehaviour  {
+	
 	public class Treasure {
+
 		public TreasureType type;
 		public int value;
 		public TreasureStates state = TreasureStates.Neutral;
@@ -44,37 +44,4 @@ namespace Tabletop{
 			this.owner = null;
 		}
 	}
-
-	//public class TreasureCombo : Treasure 
-	//{
-
-	//	//public TreasureCombo() : base()
-	//	//{
-	//	//}
-
-	//	public static TreasureCombo FactoryMethod()
-	//	{
-	//		//whatever you want to do with your string before passing it in
-	//		return new Treasure(TreasureType.F, 0);
-	//	}
-
-	//	//private static TreasureComboConstructor()
-	//	//{
-	//	//	Treasure(TreasureType.F, 0);
-	//	//}
-	//}
-
-
-
-	//public MyExceptionClass(string message, string extraInfo) : 
- //        base(ModifyMessage(message, extraInfo))
- //    {
-	//}
-
-	//private static string ModifyMessage(string message, string extraInfo)
-	//{
-	//	Trace.WriteLine("message was " + message);
-	//	return message.ToLowerInvariant() + Environment.NewLine + extraInfo;
-//	//}
-//}
 }

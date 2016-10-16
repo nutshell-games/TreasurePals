@@ -47,20 +47,6 @@ namespace Tabletop
 	}
 
 
-
-	public class TreasureLocation
-	{
-
-		public Player player = null;
-		public Treasure treasure = null;
-		public bool active = true;
-
-		public TreasureLocation()
-		{
-
-		}
-	}
-
 	public class Player {
 
 		public int currentPosition = 0;
@@ -744,7 +730,6 @@ namespace Tabletop
 
 					Debug.Log("currentPlayer position: " + currentPlayer.currentPosition);
 
-					TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 					// skip over location occupied by player
 					if (treasureLocations [currentPlayer.currentPosition].player==null) {
