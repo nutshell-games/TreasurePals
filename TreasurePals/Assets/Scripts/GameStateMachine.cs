@@ -25,7 +25,7 @@ namespace Tabletop
 
 	public enum TreasureStates
 	{
-		Neutral, Collected, Captured;
+		Neutral, Collected, Captured
 	}
 
 	public enum GameStates {
@@ -53,6 +53,7 @@ namespace Tabletop
 
 		public Player player = null;
 		public Treasure treasure = null;
+		public bool active = true;
 
 		public TreasureLocation()
 		{
@@ -142,7 +143,7 @@ namespace Tabletop
 		public PlayerColors[] playerOrder;
 
 		public List<Treasure> treasureQueue = new List<Treasure> ();
-		public List<Treasure> treasureCollected = new List<Treasure> ();
+		public Stack<Treasure> treasureCollected = new Stack<Treasure> ();
 		public List<Treasure> treasureCaptured = new List<Treasure> ();
 
 		public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
@@ -313,10 +314,46 @@ namespace Tabletop
 
 		}
 
+		Treasure createComboTreasure(List<Treasure> treasures)
+		{
+
+			int comboValue = 0;
+			foreach (Treasure treasure in treasures)
+			{
+				comboValue += treasure.value;
+			}
+
+			return new Treasure(TreasureType.F, comboValue, treasures.Count);
+		}
+
+		List<Treasure> takeTreasuresToCombo(Stack<Treasure> collectedTreasures)
+		{
+			if (collectedTreasures.Count == 0)
+			{
+				return null;
+			}
+			else {
+
+				int treasuresInGroup = 3;
+
+				List<Treasure> treasureGroup = new List<Treasure>();
+
+				int index = 0;
+				while (index < treasuresInGroup && collectedTreasures.Count>0)
+				{
+					treasureGroup.Add(collectedTreasures.Pop());
+					index++;
+				}
+
+				return treasureGroup;
+			}
+		}
+
 
 		// Remove all collected treasures from queue
 		public void cleanupTreasures()
 		{
+			Debug.Log("cleanupTreasures for round " + currentRound);
 
 			// each player tracks his own captured treasures
 			foreach (Player player in players)
@@ -328,9 +365,12 @@ namespace Tabletop
 
 				foreach (Treasure aCollectedTreasure in player.collectedTreasures)
 				{
-					treasureCollected.Add(aCollectedTreasure);
+					treasureCollected.Push(aCollectedTreasure);
 				}
 			}
+
+			Debug.Log("treasures captured:" + treasureCaptured.Count);
+			Debug.Log("treasures collected:" + treasureCollected.Count);
 
 			foreach (Treasure treasure in treasureQueue)
 			{
@@ -341,17 +381,12 @@ namespace Tabletop
 				}
 			}
 
-			List<Treasure> treasureCombos = new List<Treasure>();
-
-			// create combo treasures from collected treasures
-			foreach (Treasure treasure in treasureCollected)
-			{
-				//TODO treasureCombos.Add(comboTreasure);
-				// treasureQueue.Add(comboTreasure);
-			}
-
 			// redistribute collected treasures into groups of 3 treasures at bottom of sea
-			treasureCollected.Clear();
+			List<Treasure> group;
+			while ((group = takeTreasuresToCombo(this.treasureCollected))!= null)
+			{
+				treasureQueue.Add(createComboTreasure(group));
+			}
 
 
 			// reset treasure locations
@@ -361,10 +396,14 @@ namespace Tabletop
 				if (treasureQueue.ElementAt(t) != null)
 				{
 					treasureLocations[t].treasure = treasureQueue[t];
-
+					treasureLocations[t].player = null;
+					treasureLocations[t].active = true;
 				}
 				else {
+					// deactivate empty location
 					treasureLocations[t].treasure = null;
+					treasureLocations[t].player = null;
+					treasureLocations[t].active = false;
 				}
 
 			}
@@ -373,21 +412,30 @@ namespace Tabletop
 
 		public void generateTreasureReport () {
 
-			treasureCollectedReport = new Dictionary<PlayerColors,List<Treasure>> ();
-			treasureCapturedReport = new Dictionary<PlayerColors,List<Treasure>> ();
+			Debug.Log("generateTreasureReport");
 
-			foreach (Treasure treasure in treasureCollected) {
+			//treasureCollectedReport = new Dictionary<PlayerColors,List<Treasure>> ();
 
-				PlayerColors color = treasure.owner.color;
+			//foreach (Treasure treasure in treasureCollected) {
 
-				treasureCollectedReport [color].Add (treasure);
-			}
+			//	PlayerColors color = treasure.owner.color;
+
+			//	treasureCollectedReport [color].Add (treasure);
+			//}
+
+			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>>();
+
 
 			foreach (Treasure treasure in treasureCaptured) {
 
 				PlayerColors color = treasure.owner.color;
 
 				treasureCapturedReport [color].Add (treasure);
+			}
+
+			foreach (KeyValuePair<PlayerColors, List<Treasure>> kvp in treasureCapturedReport)
+			{
+				Debug.Log("Player " + kvp.Key + " treasures: " + kvp.Value.Count);
 			}
 		}
 
@@ -647,7 +695,12 @@ namespace Tabletop
 
 			Debug.Log("applyMovementForCurrentPlayer "+ currentPlayer.color +
 			          " currentPosition: "+currentPlayer.currentPosition+
-			          " distance:" + distanceToMove);
+			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
+
+			if (currentPlayer.state == PlayerStates.LeavingShip)
+			{
+				currentPlayer.state = PlayerStates.Diving;
+			}
 
 			// return array of movements
 			int[] movementHistory = new int[distanceToMove];
@@ -758,7 +811,7 @@ namespace Tabletop
 				currentTreasure.collect(currentPlayer);
 				currentPlayer.collectedTreasures.Add(currentTreasure);
 
-				treasureCollected.Add(currentTreasure);
+				treasureCollected.Push(currentTreasure);
 
 				// clear treasure at location
 				currentLocation.treasure = null;

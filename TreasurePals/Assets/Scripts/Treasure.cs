@@ -9,10 +9,18 @@ namespace Tabletop{
 		public int value;
 		public TreasureStates state = TreasureStates.Neutral;
 		public Player owner = null;
+		public int comboCount = 0;
 
 		public Treasure (TreasureType type, int value) {
 			this.type = type;
 			this.value = value;
+		}
+
+		public Treasure(TreasureType type, int value, int comboCount)
+		{
+			this.type = type;
+			this.value = value;
+			this.comboCount = comboCount;
 		}
 
 		public void collect (Player collectingPlayer) {
@@ -67,6 +75,6 @@ namespace Tabletop{
 	//{
 	//	Trace.WriteLine("message was " + message);
 	//	return message.ToLowerInvariant() + Environment.NewLine + extraInfo;
-	//}
-}
+//	//}
+//}
 }

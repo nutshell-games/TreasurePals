@@ -84,17 +84,18 @@ public class GameStateManager : MonoBehaviour {
 			stateMachine.rollForCurrentPlayer();
 			stateMachine.setCurrentPlayerRoll(stateMachine.lastRoll);
 		}
-		// choose direction DOWN
-		else if (Input.GetKeyUp("d"))
-		{
-			stateMachine.commitMovement();
-		}
+
 		// choose direction UP
 		else if (Input.GetKeyUp("u"))
 		{
 			stateMachine.directCurrentPlayerToShip();
+		}
+		// MOVE
+		else if (Input.GetKeyUp("m"))
+		{
 			stateMachine.commitMovement();
 		}
+
 		// if TreasureAvailable
 		// take treasure
 		else if (Input.GetKeyUp("p"))
