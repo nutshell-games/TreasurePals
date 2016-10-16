@@ -7,122 +7,70 @@ using System.Linq;
 
 namespace Tabletop 
 {
-	public enum PlayerColors {
-		Red, Green, Blue, Yellow, Purple, Orange
-	}
-
-	public enum PlayerStates
-	{
-		LeavingShip, Diving, Ascending, ReturnedToShip, LostAtSea
-	}
-
-	//A-D tier 1,2,3,4 
-	//E is empty treasure
-	//F is combo treasure
-	public enum TreasureType {
-		A, B, C, D, E, F
-	}
-
-	public enum TreasureStates
-	{
-		Neutral, Collected, Captured
-	}
-
-	public enum GameStates {
-		GameStarted,GameInProgress,GameEnded,
-		TreasureScoring,TreasureTotaled,VictorDecided
-	} 
-
-	public enum RoundStates {
-		RoundStarted,RoundInProgress,RoundEnded,
-		AirDeducted,AirEmpty,
-		TreasureScoring
-	}
-
-	public enum TurnStates {
-		TurnStarted,TurnEnded,
-		PlayerRolling,PlayerRolled,PlayerMoving,PlayerMoved,
-		TreasureAvailable,TreasureUnavailable,
-		TreasureCollected,TreasurePassed
-	}
-
-
-	public class Player {
-
-		public int currentPosition = 0;
-		public PlayerColors color;
-		//public bool isDiving = true;
-		public PlayerStates state = PlayerStates.LeavingShip;
-
-		public List<Treasure> collectedTreasures;
-		public List<Treasure> capturedTreasures;
-
-		public Player (PlayerColors color) {
-
-			this.color = color;
-			collectedTreasures = new List<Treasure>();
-		}
-
-		// the player returned safely to the ship!
-		public void placeInShip()
-		{
-			Debug.Log("PlaceInShip: " + color);
-			currentPosition = -1;
-			state = PlayerStates.ReturnedToShip;
-
-			capturedTreasures = new List<Treasure>(collectedTreasures);
-			collectedTreasures.Clear();
-		}
-
-		public void returnToShip() {
-
-			if (state != PlayerStates.Diving)
-			{
-				throw new System.Exception("player is not diving.");
-			}
-
-			if (state == PlayerStates.Diving)
-			{
-				state = PlayerStates.Ascending;
-			}
-		}
-
-		public void reset()
-		{
-			currentPosition = 0;
-			state = PlayerStates.LeavingShip;
-		}
-	}
-
+	
 	public class ScoreReport
 	{
 
-		PlayerColors color;
-		Dictionary<TreasureType, int> treasureTypeTotals;
-		int totalScore;
+		public PlayerColors color;
+		public Dictionary<TreasureType, int> treasureTypeTotals;
+		public int totalScore = 0;
+		public int totalTreasures = 0;
+		public int finalTreasureTypeValue = 0;
 
-		ScoreReport(PlayerColors color)
+		public ScoreReport(PlayerColors color)
 		{
 			this.color = color;
-			this.totalScore = 0;
+		}
 
-			//				TreasureType[] values = Enum.GetValues(typeof(TreasureType));
-			//
-			//				foreach (TreasureType value in values) {
-			//					treasureTypeTotals.Add(value,0);
-			//				}
+		public void getTreasureTypeTotals(List<Treasure> capturedTreasures)
+		{
+			totalTreasures = capturedTreasures.Count;
+
+			treasureTypeTotals[TreasureType.A] = 0;
+			treasureTypeTotals[TreasureType.B] = 0;
+			treasureTypeTotals[TreasureType.C] = 0;
+			treasureTypeTotals[TreasureType.D] = 0;
+			treasureTypeTotals[TreasureType.F] = 0;
+
+			foreach (Treasure treasure in capturedTreasures)
+			{
+				if (treasureTypeTotals.ContainsKey(treasure.type))
+				{
+					treasureTypeTotals[treasure.type] += 1;
+				}
+				else {
+					treasureTypeTotals[treasure.type] = 1;
+				}
+
+				totalScore += treasure.value;
+			}
+
+			finalTreasureTypeValue = 0;
+
+			finalTreasureTypeValue += treasureTypeTotals[TreasureType.A] * 1;
+			finalTreasureTypeValue += treasureTypeTotals[TreasureType.B] * 10;
+			finalTreasureTypeValue += treasureTypeTotals[TreasureType.C] * 100;
+			finalTreasureTypeValue += treasureTypeTotals[TreasureType.D] * 1000;
+			finalTreasureTypeValue += treasureTypeTotals[TreasureType.F] * 10000;
 		}
 	}
 
 	public class StateMachine {
+
+
+		static int maxRounds = 3;
+		static int maxAir = 25;
+		static int maxRoll = 6;
+		static int minRoll = 2;
 
 		// can be received from the server
 		// fixed order of treasure values
 		int[][] startingTreasures;
 
 		public List<Player> players;
+		public Dictionary<PlayerColors,Player> playersByColor;
 
-		public int currentGameState;
+		public GameStates currentGameState;
 
 		public int firstPlayer = 0;
 
@@ -132,36 +80,35 @@ namespace Tabletop
 		public Stack<Treasure> treasureCollected = new Stack<Treasure> ();
 		public List<Treasure> treasureCaptured = new List<Treasure> ();
 
-		public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
+		//public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
 		public Dictionary<PlayerColors,List<Treasure>> treasureCapturedReport;
-		public Dictionary<PlayerColors,int> treasureScoredReport;
+		public List<ScoreReport> treasureScoredReport;
 
 		public List<TreasureLocation> treasureLocations = new List<TreasureLocation> ();
 
-		public int currentRound = 0;
 		public RoundStates currentRoundState = RoundStates.RoundEnded;
+		public int currentRound = 0;
 		public int currentAir = 0;
-
-		static int maxRounds = 3;
-		static int maxAir = 25;
-		static int maxRoll = 6;
-		static int minRoll = 2;
 
 		public int numberOfPlayers = 0;
 
+		public TurnStates currentTurnState = TurnStates.TurnEnded;
 		public Player currentPlayer;
 		public int currentPlayerIndex = 0;
 		public int currentPlayerRoll = 0;
 		public int currentPlayerMovement = 0;
-		public TurnStates currentTurnState = TurnStates.TurnEnded;
+
 		public int lastRoll = 0;
+
+		public Player winner = null;
+
 
 		public StateMachine() {
 
 			players = new List<Player> ();
-			treasureCollectedReport = new Dictionary<PlayerColors, List<Treasure>> ();
+
 			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
-			treasureScoredReport = new Dictionary<PlayerColors, int>();
+			treasureScoredReport = new List<ScoreReport>();
 		}
 
 		// GAME SETUP
@@ -172,10 +119,9 @@ namespace Tabletop
 			Debug.Log ("setupGameForPlayers");
 
 			foreach (PlayerColors playerColor in selectedPlayers) {
-				spawnPlayer (playerColor);
-
-				treasureCollectedReport.Add (playerColor, new List<Treasure> ());
+				
 				treasureCapturedReport.Add (playerColor, new List<Treasure> ());
+				playersByColor.Add(playerColor, spawnPlayer(playerColor));
 			}
 				
 			generateStartingTreasures ();
@@ -200,12 +146,14 @@ namespace Tabletop
 			this.playerOrder = _playerOrder;
 		}
 
-		private void spawnPlayer (PlayerColors playerColor) {
+		private Player spawnPlayer (PlayerColors playerColor) {
 
 			Debug.Log ( String.Format("spawn player {0}",playerColor) );
 
 			Player newPlayer = new Player (playerColor);
 			players.Add (newPlayer);
+
+			return newPlayer;
 		}
 
 
@@ -273,32 +221,107 @@ namespace Tabletop
 
 		public void proceedToScoring() {
 
-//			// create list of each Player's collected treasures
-//			// treasureScoredReport = new Dictionary<PlayerColors,int> ();
-//			treasureScoredReport = new List<ScoreReport> ();
-//
-//			foreach (Player player in players) {
-//				
-//				treasureScoredReport.Add (player.color, 0);
-//			}
-//
-//			foreach (Treasure treasure in treasureCaptured) {
-//
-//				PlayerColors color = treasure.collectedByPlayer;
-//
-//				treasureScoredReport [color] += treasure.value;
-//			}
+			currentGameState = GameStates.ScoringInProgress;
 
-			// account for number of treasures of each type to break ties
+			// create list of each Player's collected treasures
+			generateTreasureReport();
 
-//			foreach (KeyValuePair item in treasureScoredReport) {
-//
-//			}
-//
-			// sort players scores
-			//treasureScoredReport.OrderBy( (item) => { return item. }
+			foreach (KeyValuePair<PlayerColors,List<Treasure>> kvp in treasureCapturedReport) {
 
+				ScoreReport report = new ScoreReport(kvp.Key);
+				report.getTreasureTypeTotals(kvp.Value);
+
+				treasureScoredReport.Add (report);
+			}
 		}
+
+		void determineWinner()
+		{
+			currentGameState = GameStates.ScoringComplete;
+
+			IEnumerable<ScoreReport> query = treasureScoredReport.OrderByDescending(
+			(ScoreReport report) => report.totalScore);
+
+			int highScore = query.ElementAt(0).totalScore;
+			List<ScoreReport> highScorers = new List<ScoreReport>();
+
+
+			foreach (ScoreReport report in query)
+			{
+				if (report.totalScore == highScore)
+				{
+					highScorers.Add(report);
+				}
+			}
+
+			if (highScorers.Count == 1)
+			{
+				currentGameState = GameStates.GameHasWinner;
+				winner = playersByColor[highScorers[0].color];
+
+			}
+			else {
+				breakTie(highScorers);
+			}
+		}
+
+
+		void breakTie(List<ScoreReport> highScorers)
+		{
+
+			// create final treasure value by type
+			List<int> finalTreasureTypeValues = new List<int>();
+
+
+			IEnumerable<ScoreReport> query = highScorers.OrderByDescending(
+				report => report.finalTreasureTypeValue );
+			
+			int highScore = query.ElementAt(0).finalTreasureTypeValue;
+
+			foreach (ScoreReport report in query)
+			{
+				if (report.totalScore == highScore)
+				{
+					highScorers.Add(report);
+				}
+			}
+
+			if (highScorers.Count == 1)
+			{
+				currentGameState = GameStates.GameHasWinner;
+				winner = playersByColor[highScorers[0].color];
+
+			}
+			else {
+				currentGameState = GameStates.GameIsDraw;
+			}
+		}
+
+
+		public Dictionary<PlayerColors, List<Treasure>> generateTreasureReport()
+		{
+
+			Debug.Log("generateTreasureReport");
+
+			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>>();
+
+
+			foreach (Treasure treasure in treasureCaptured)
+			{
+
+				PlayerColors color = treasure.owner.color;
+
+				treasureCapturedReport[color].Add(treasure);
+			}
+
+			foreach (KeyValuePair<PlayerColors, List<Treasure>> kvp in treasureCapturedReport)
+			{
+				Debug.Log("Player " + kvp.Key + " treasures: " + kvp.Value.Count);
+			}
+
+			return treasureCapturedReport;
+		}
+
 
 		Treasure createComboTreasure(List<Treasure> treasures)
 		{
@@ -396,34 +419,6 @@ namespace Tabletop
 
 		}
 
-		public void generateTreasureReport () {
-
-			Debug.Log("generateTreasureReport");
-
-			//treasureCollectedReport = new Dictionary<PlayerColors,List<Treasure>> ();
-
-			//foreach (Treasure treasure in treasureCollected) {
-
-			//	PlayerColors color = treasure.owner.color;
-
-			//	treasureCollectedReport [color].Add (treasure);
-			//}
-
-			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>>();
-
-
-			foreach (Treasure treasure in treasureCaptured) {
-
-				PlayerColors color = treasure.owner.color;
-
-				treasureCapturedReport [color].Add (treasure);
-			}
-
-			foreach (KeyValuePair<PlayerColors, List<Treasure>> kvp in treasureCapturedReport)
-			{
-				Debug.Log("Player " + kvp.Key + " treasures: " + kvp.Value.Count);
-			}
-		}
 
 
 //	GAME LOOP
@@ -471,10 +466,17 @@ namespace Tabletop
 
 			} else {
 				Debug.Log("all rounds over");
-				proceedToScoring ();
+				endGame();
 			}
 
 
+		}
+
+		void endGame()
+		{
+			currentGameState = GameStates.GameEnded;
+			proceedToScoring();
+			determineWinner();
 		}
 
 		public void startNextTurn() {
@@ -624,6 +626,10 @@ namespace Tabletop
 
 		public bool directCurrentPlayerToShip()
 		{
+			if (currentPlayer.collectedTreasures.Count == 0)
+			{
+				throw new System.Exception("cannot return to ship without any treasure.");
+			}
 
 			if (currentPlayer.state == PlayerStates.Diving)
 			{
