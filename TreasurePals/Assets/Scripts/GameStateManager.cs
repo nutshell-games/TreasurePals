@@ -7,12 +7,11 @@ using Tabletop;
 public class GameStateManager : MonoBehaviour {
 	public static GameStateManager instance;
 
-	public StateMachine stateMachine;
-	List<PlayerColors> selectedPlayers;
+	public StateMachine stateMachine = new StateMachine();
+	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
 
 	// Use this for initialization
 	void Start () {
-	
 	}
 
 	void Awake() {
@@ -20,11 +19,6 @@ public class GameStateManager : MonoBehaviour {
 			instance = this;
 		} else
 			Destroy (this);
-		stateMachine = new StateMachine ();
-
-		selectedPlayers = new List<PlayerColors> ();
-
-		TreasureManager.instance.InitialPrefabPlacement ();
 	}
 
 	// Update is called once per frame

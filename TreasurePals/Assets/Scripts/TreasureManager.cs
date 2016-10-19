@@ -26,6 +26,9 @@ public class TreasureManager : MonoBehaviour {
 		GetTreasureLocations ();
 	}
 
+	void Start(){
+		//InitialPrefabPlacement ();
+	}
 	void GetTreasureLocations(){
 		foreach (Transform child in gameObject.transform) {
 			TreasureLocations.Add (child);
@@ -39,31 +42,32 @@ public class TreasureManager : MonoBehaviour {
 		int numTreasures = TreasureLocations.Count;
 		List<TreasureLocation> treasureLocationReference = GameStateManager.instance.stateMachine.treasureLocations;
 		for (int i = 0; i < numTreasures; i++) {
-			if (treasureLocationReference [i].treasure.type == TreasureType.A) {
-				GameObject tp = Instantiate (Tier1TreasurePrefab, transform) as GameObject;
-				tp.transform.position = TreasureLocations [i].position;
-			}
-			else if (treasureLocationReference [i].treasure.type == TreasureType.B) {
-				GameObject tp = Instantiate (Tier2TreasurePrefab, transform) as GameObject;
-				tp.transform.position = TreasureLocations [i].position;
-				
-			}
-			else if (treasureLocationReference [i].treasure.type == TreasureType.C) {
-				GameObject tp = Instantiate (Tier3TreasurePrefab, transform) as GameObject;
-				tp.transform.position = TreasureLocations [i].position;
-				
-			}
-			else if (treasureLocationReference [i].treasure.type == TreasureType.D) {
-				GameObject tp = Instantiate (Tier4TreasurePrefab, transform) as GameObject;
-				tp.transform.position = TreasureLocations [i].position;
-				
-			}
-			else if (treasureLocationReference [i].treasure.type == TreasureType.E) {
-				GameObject tp = Instantiate (Tier5TreasurePrefab, transform) as GameObject;
-				tp.transform.position = TreasureLocations [i].position;
-				
-			}
-			treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;
+			GameObject prefabRef = null;
+			switch (treasureLocationReference [i].treasure.type) {
+			case TreasureType.A:
+				prefabRef = Tier1TreasurePrefab;
+				break;
+			case TreasureType.B:
+				prefabRef = Tier2TreasurePrefab;
+				break;
+			case TreasureType.C:
+				prefabRef = Tier3TreasurePrefab;
+				break;
+			case TreasureType.D:
+				prefabRef = Tier4TreasurePrefab;
+				break;
+			case TreasureType.E:
+				prefabRef = Tier5TreasurePrefab;
+				break;
+			default:
+				break;
+			}	
+
+			GameObject tp = Instantiate (prefabRef, transform) as GameObject;
+			tp.transform.position = TreasureLocations [i].position;
+
+		treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;
+
 		}
 	}
 
