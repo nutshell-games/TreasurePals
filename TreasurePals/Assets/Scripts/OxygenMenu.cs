@@ -26,13 +26,10 @@ public class OxygenMenu : MonoBehaviour {
 	}
 
 	void UpdateMenu(){
-		Debug.LogError (ContentTransform.offsetMax);
 		if (ContentTransform.offsetMax.y >= TopThreshold) {
-			Debug.LogError ("Show menu");
 			ShowMenu ();
 		} else {
 			HideMenu ();
-			Debug.LogError ("menu hidden");
 		}
 	}
 

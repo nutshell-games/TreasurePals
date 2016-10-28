@@ -114,7 +114,7 @@ namespace Tabletop
 		// GAME SETUP
 		//===========
 
-		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers  ) {
+		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
 
 			Debug.Log ("setupGameForPlayers");
 

@@ -12,6 +12,7 @@ public class GameStateManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		
 	}
 
 	void Awake() {
@@ -21,8 +22,46 @@ public class GameStateManager : MonoBehaviour {
 			Destroy (this);
 	}
 
+	//Adds num number of players and add to statemachine
+	public void SetNumPlayers(int num){
+		switch (num) {
+			case 6:
+				Debug.LogError ("Adding 6th");
+				selectedPlayers.Add (PlayerColors.Purple);
+				goto case 5;
+			case 5:
+				Debug.LogError ("Adding 5th");
+				selectedPlayers.Add (PlayerColors.Yellow);
+				goto case 4;
+			case 4:
+				Debug.LogError ("Adding 4th");
+				selectedPlayers.Add (PlayerColors.Green);
+				goto case 3;
+			case 3:
+				Debug.LogError ("Adding 3rd");
+				selectedPlayers.Add (PlayerColors.Blue);
+				goto case 2;
+			case 2:
+				Debug.LogError ("Adding 2nd");
+				selectedPlayers.Add (PlayerColors.Orange);
+				goto case 1;
+			case 1:
+				Debug.LogError ("Adding 1st");
+				selectedPlayers.Add (PlayerColors.Red);
+				break;
+			default:
+				break;
+		}
+		stateMachine.setupGameForPlayers (selectedPlayers);
+	}
+
+
+
 	// Update is called once per frame
 	void Update () {
+		if (Input.GetKeyDown ("i")) {
+			SetNumPlayers (5);
+		}
 
 		if (Input.GetKeyUp(KeyCode.Alpha2))
 		{
