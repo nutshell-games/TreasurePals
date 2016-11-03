@@ -161,4 +161,9 @@ public class GameStateManager : MonoBehaviour {
 
 	
 	}
+
+	public void StartGameSequence(){
+	
+	}
+
 }

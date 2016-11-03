@@ -19,10 +19,14 @@ public class OxygenMenu : MonoBehaviour {
 	[SerializeField]
 	private bool MenuOpen = false;
 	// Use this for initialization
-	
+
+	public bool EnableAnimate;
+
 	// Update is called once per frame
 	void Update () {
-		UpdateMenu ();
+		if (EnableAnimate) {
+			UpdateMenu ();
+		}
 	}
 
 	void UpdateMenu(){
