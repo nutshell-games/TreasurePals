@@ -12,7 +12,7 @@ public class Submarine : MonoBehaviour {
 	private GameObject PositionParent;
 
 	[SerializeField]
-	private SubAnimator subAnim;
+	public SubAnimator subAnim;
 
 	public List<GameObject> ListOfDivers = new List<GameObject>();
 	public List<GameObject> ListOfPositions = new List<GameObject> ();
@@ -20,22 +20,22 @@ public class Submarine : MonoBehaviour {
 
 	public void Dive(){
 		subAnim.AllAboard ();
-
-		//divers hop to sub,
-		//sky moves away
-		//submarine decends to middle
-		// bubbles appear
-		//fade away
-
-	}
-
-	public void UnloadDivers(){
-		subAnim.AllExit (ListOfDivers, ListOfPositions);
-	
 	}
 
 
-	public void CreateDivers(int num){
+	public IEnumerator UnloadDivers(int numOfDivers){
+		CreateDivers (numOfDivers);
+		yield return new WaitForSeconds (0.5f);
+		subAnim.AllExit (ListOfDivers, ListOfPositions);	
+		yield return new WaitForSeconds (0.5f);
+	}
+
+
+	void CreateDivers(int num){//destroys all existing divers and create new ones
+		for (int i = ListOfDivers.Count-1; i >= 0; i--) {
+			Destroy (ListOfDivers [i]);
+		}
+		ListOfDivers.Clear ();
 		//create position placeholders;
 		for (int i = 0; i < num; i++) {
 			ListOfPositions.Add(Instantiate (PositionPrefab, PositionParent.transform) as GameObject);
@@ -45,13 +45,13 @@ public class Submarine : MonoBehaviour {
 		}
 	}
 
+	public void MoveDiverToSpot(int diverIndex, int locationIndex){
+		//NEED TO DO THIS AGAIN TO ACCOUNT FOR ALL TREASURES
+		subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasureManager.instance.TreasureLocations [locationIndex]);
+	}
 
-
-
-
-
-
-
-
+	void MoveDiverToSubmarine(){
+	
+	}
 
 }

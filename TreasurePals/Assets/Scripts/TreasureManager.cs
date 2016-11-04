@@ -38,9 +38,9 @@ public class TreasureManager : MonoBehaviour {
 
 	//place physical prefabs on treasure spots
 
-	public void InitialPrefabPlacement(){
-		int numTreasures = TreasureLocations.Count;
+	public void TreasurePlacement(){
 		List<TreasureLocation> treasureLocationReference = GameStateManager.instance.stateMachine.treasureLocations;
+		int numTreasures = treasureLocationReference.Count;
 		for (int i = 0; i < numTreasures; i++) {
 			GameObject prefabRef = null;
 			switch (treasureLocationReference [i].treasure.type) {

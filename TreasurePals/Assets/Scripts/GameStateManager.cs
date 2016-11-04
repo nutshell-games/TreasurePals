@@ -10,7 +10,7 @@ public class GameStateManager : MonoBehaviour {
 	public StateMachine stateMachine = new StateMachine();
 	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
 
-	public Submarine subScript; //submarine script..
+	public Submarine subScript; //submarine script..controls submarine animations, contains list of Player UI elements
 	public MenuManager Menu; // Menu's script
 
 	void Awake() {
@@ -24,7 +24,7 @@ public class GameStateManager : MonoBehaviour {
 	void Update () {
 
 		if (Input.GetKeyDown ("l")) {
-			StartSequence ();
+			OpeningSequence ();
 		}
 		if (Input.GetKeyDown ("i")) {
 			SetNumPlayers (5);
@@ -88,7 +88,7 @@ public class GameStateManager : MonoBehaviour {
 		else if (Input.GetKeyUp("r"))
 		{
 			stateMachine.rollForCurrentPlayer();
-			stateMachine.setCurrentPlayerRoll(stateMachine.lastRoll);
+			stateMachine.setCurrentPlayerRoll();
 		}
 
 		// choose direction UP
@@ -129,7 +129,7 @@ public class GameStateManager : MonoBehaviour {
 	
 	}
 
-	public void StartSequence(){
+	public void OpeningSequence(){
 		subScript.Dive ();
 		StartCoroutine (OpenNumPlayerMenuWithDelay ());
 	}
@@ -145,28 +145,22 @@ public class GameStateManager : MonoBehaviour {
 	public void SetNumPlayers(int num){
 		switch (num) {
 		case 6:
-			Debug.LogError ("Adding 6th");
-			selectedPlayers.Add (PlayerColors.Purple);
+			selectedPlayers.Add (PlayerColors.Red);
 			goto case 5;
 		case 5:
-			Debug.LogError ("Adding 5th");
-			selectedPlayers.Add (PlayerColors.Yellow);
+			selectedPlayers.Add (PlayerColors.Green);
 			goto case 4;
 		case 4:
-			Debug.LogError ("Adding 4th");
-			selectedPlayers.Add (PlayerColors.Green);
+			selectedPlayers.Add (PlayerColors.Orange);
 			goto case 3;
 		case 3:
-			Debug.LogError ("Adding 3rd");
 			selectedPlayers.Add (PlayerColors.Blue);
 			goto case 2;
 		case 2:
-			Debug.LogError ("Adding 2nd");
-			selectedPlayers.Add (PlayerColors.Orange);
+			selectedPlayers.Add (PlayerColors.Purple);
 			goto case 1;
 		case 1:
-			Debug.LogError ("Adding 1st");
-			selectedPlayers.Add (PlayerColors.Red);
+			selectedPlayers.Add (PlayerColors.Yellow);
 			break;
 		default:
 			break;
@@ -186,8 +180,10 @@ public class GameStateManager : MonoBehaviour {
 		// return back to diving submarine,
 	}
 
-	public void StartGameSequence(){
-		StartCoroutine (gameSequenceWithDelay ());
+	public void StartFirstRound(){
+		SetNumPlayers (4);
+		Menu.CloseMenus ();
+		StartCoroutine (StartFirstRoundSequence ());
 		//animate submarine to the top,
 		//spawn divers = number of players while animating them.
 
@@ -198,17 +194,144 @@ public class GameStateManager : MonoBehaviour {
 		//begin turn 1, round 1.
 	}
 
-	IEnumerator gameSequenceWithDelay(){
-		SetNumPlayers (2);
-		Menu.CloseMenus ();
-		subScript.CreateDivers (stateMachine.numberOfPlayers);
+
+	#region sequences - these are functions that may or may not be sensitive to "transitiions" or animations (so we can control the timing flow of the game)
+	IEnumerator StartFirstRoundSequence(){		
+		yield return StartCoroutine (subScript.subAnim.ComingToStop ());
+		yield return StartCoroutine (StartRoundSequence ());
+	}
+
+	IEnumerator StartRoundSequence(){
+		//unboards divers 
+		//start turn sequence
 		yield return new WaitForSeconds (1.0f);
-		subScript.UnloadDivers ();
+		yield return StartCoroutine(subScript.UnloadDivers (stateMachine.numberOfPlayers));
 		yield return new WaitForSeconds (1.0f);
-		TreasureManager.instance.InitialPrefabPlacement ();
+		TreasureManager.instance.TreasurePlacement ();
+		StartCoroutine(StartTurnSequence ());
+	}
+
+	IEnumerator StartTurnSequence(){
+		stateMachine.startNextTurn ();
+		//determines whether or not to open menu
+		if (stateMachine.isCurrentPlayerDiving() && stateMachine.currentPlayer.collectedTreasures.Count>0) { // if player is DIVING and POSSES treasures,
+			Menu.OpenGoUpOrDown(); //player input calls Button_Direction
+		}
+		else { //if player is NOT diving do this
+			StartCoroutine(DirectionNotificationSequence());
+		}
+
+		yield return null;
+		//show its a player's turn,
+		//pause,
+		//roll dice sequence
+	}
+
+	//DISPLAYS WHICH DIRECTION THE PLAYER IS GOING
+	IEnumerator DirectionNotificationSequence(){  
+		if (stateMachine.isCurrentPlayerDiving()) {
+			//display notification that player is decending
+			Debug.LogError ("I'm GOING DOWN");
+		} else {
+			//display notification that player is ascending			
+			Debug.LogError ("I'm GOING UP");
+		}
+		StartCoroutine(RollDiceSequence ());
+		yield return null;
 
 	}
 
+	//ROLLS THE DICE, EITHER BY CODE OR BY PLAYER INTERACTION
+	IEnumerator RollDiceSequence(){
+		stateMachine.rollForCurrentPlayer();
+		stateMachine.setCurrentPlayerRoll ();
+		//show roll dice menu
+		//show dice value
+		//show Move direction menu,
+		StartCoroutine(MoveSequence ());
+		yield return null;
+	}
+
+	//OBTAINS TREASURE WITH ANIMATION
+	IEnumerator GetTreasureSequence(bool t){
+		if(t){//animate treasure into player
+			
+		}
+		else
+		stateMachine.selectTreasure (t);
+		StartCoroutine (EndTurnSequence ());
+		yield return null;
+	}
+
+	//MOVE PLAYER TO DESTINATION WITH ANIMATION  ** CURRENTLY DOES NOT ACCOUNT FOR RETURNING TO SHIP**
+	IEnumerator MoveSequence(){
+		stateMachine.commitMovement();
+		Debug.LogError ("Moving character  " + stateMachine.currentPlayerIndex + " to Treasure location " + stateMachine.currentPlayer.currentPosition);
+		subScript.MoveDiverToSpot (stateMachine.currentPlayerIndex, stateMachine.currentPlayer.currentPosition);
+		//animates player to move 1 space at a time going down
+		//when player stops, open TreasurePrompt menu
+		StartCoroutine(DestinationReachedSequence());
+		yield return null;
+	}
+
+	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
+	IEnumerator DestinationReachedSequence(){
+		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure
+			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
+		} else {
+			if (stateMachine.currentPlayer.collectedTreasures.Count > 0) {// //if there is no treasure and player have treasure
+				Menu.OpenDropTreasure ();//player input calls Button_DropTreasure
+			} else {
+				StartCoroutine(EndTurnSequence ());
+			}
+			//theres no treasure
+		}
+		yield return null;
+
+	}
+
+
+
+	IEnumerator ReturnTreasureSequence(int treasureIndex){
+		StartCoroutine (EndTurnSequence ());
+		yield return null;
+
+
+		//animates treasure going from player to "empty" treasure location
+		
+	}
+
+	IEnumerator EndTurnSequence(){
+		stateMachine.endTurn ();
+		yield return null;
+		//animates ending turn
+		//>  Start Turn Sequence
+	}
+	#endregion
+
+
+
+
+
+	#region these are used for UI BUTTONS
+	//USER CHOOSE TO GO  UP OR DOWN
+	public void Button_Direction(bool t){
+		if (t) {
+			stateMachine.directCurrentPlayerToShip ();
+		}
+		StartCoroutine(DirectionNotificationSequence ());
+	}
+
+	//USERS CHOOSE TO GET TREASURE OR NOT
+
+	public void Button_GetTreasure(bool t){
+		StartCoroutine(GetTreasureSequence (t));
+	}
+
+	public void Button_DropTreasure(int treasureIndex){
+		StartCoroutine (ReturnTreasureSequence (treasureIndex));
+	}
+	#endregion
 
 
 

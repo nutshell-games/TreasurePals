@@ -597,8 +597,8 @@ namespace Tabletop
 			return roll1 + roll2;
 		}
 
-		public void setCurrentPlayerRoll (int rollValue) {
-
+		public void setCurrentPlayerRoll () {
+			int rollValue = lastRoll;
 			if (currentTurnState != TurnStates.PlayerRolling) {
 				throw new System.Exception ("Player roll is not pending.");
 			}

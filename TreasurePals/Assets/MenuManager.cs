@@ -13,6 +13,11 @@ public class MenuManager : MonoBehaviour {
 
 	private Animator currentAnim;
 
+	public GameObject GoUpOrDownMenu;
+
+	public GameObject YesOrNoTreasure;
+
+	public GameObject DropTreasure;
 
 	public void OpenNumberOfPlayer(){
 		if (currentAnim != null) {//if the menu is player order
@@ -46,4 +51,17 @@ public class MenuManager : MonoBehaviour {
 		currentAnim.SetTrigger ("back");
 	
 	}
+
+	public void OpenGoUpOrDown(){
+		GoUpOrDownMenu.SetActive (true);
+	}
+
+	public void OpenDropTreasure(){
+		DropTreasure.SetActive (true);
+	}
+
+	public void OpenYesNoTreasure(){
+		YesOrNoTreasure.SetActive (true);
+	}
+
 }
