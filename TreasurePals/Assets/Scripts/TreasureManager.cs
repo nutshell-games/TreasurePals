@@ -64,6 +64,7 @@ public class TreasureManager : MonoBehaviour {
 			}	
 
 			GameObject tp = Instantiate (prefabRef, transform) as GameObject;
+			tp.transform.localScale = prefabRef.transform.localScale;
 			tp.transform.position = TreasureLocations [i].position;
 
 		treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;

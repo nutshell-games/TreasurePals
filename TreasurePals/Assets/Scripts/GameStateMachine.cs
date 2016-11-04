@@ -68,7 +68,7 @@ namespace Tabletop
 		int[][] startingTreasures;
 
 		public List<Player> players;
-		public Dictionary<PlayerColors,Player> playersByColor;
+		public Dictionary<PlayerColors,Player> playersByColor = new Dictionary<PlayerColors,Player>();
 
 		public GameStates currentGameState;
 
@@ -115,7 +115,7 @@ namespace Tabletop
 		//===========
 
 		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
-
+			numberOfPlayers = selectedPlayers.Count;
 			Debug.Log ("setupGameForPlayers");
 
 			foreach (PlayerColors playerColor in selectedPlayers) {
