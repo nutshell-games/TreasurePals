@@ -689,6 +689,9 @@ namespace Tabletop
 			          " currentPosition: "+currentPlayer.currentPosition+
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
 
+			// CLEAR CURRENT PLAYER'S TREASURE LOCATION BEFORE MOVING
+			treasureLocations[currentPlayer.currentPosition].player = null;
+
 			if (currentPlayer.state == PlayerStates.LeavingShip)
 			{
 				currentPlayer.state = PlayerStates.Diving;
