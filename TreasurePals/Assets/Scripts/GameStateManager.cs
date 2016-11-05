@@ -181,7 +181,7 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	public void StartFirstRound(){
-		SetNumPlayers (4);
+		SetNumPlayers (2);
 		Menu.CloseMenus ();
 		StartCoroutine (StartFirstRoundSequence ());
 		//animate submarine to the top,
@@ -197,6 +197,7 @@ public class GameStateManager : MonoBehaviour {
 
 	#region sequences - these are functions that may or may not be sensitive to "transitiions" or animations (so we can control the timing flow of the game)
 	IEnumerator StartFirstRoundSequence(){		
+		stateMachine.startNextRound ();
 		yield return StartCoroutine (subScript.subAnim.ComingToStop ());
 		yield return StartCoroutine (StartRoundSequence ());
 	}
@@ -212,6 +213,7 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	IEnumerator StartTurnSequence(){
+		Debug.LogError ("Beginning new turn");
 		stateMachine.startNextTurn ();
 		//determines whether or not to open menu
 		if (stateMachine.isCurrentPlayerDiving() && stateMachine.currentPlayer.collectedTreasures.Count>0) { // if player is DIVING and POSSES treasures,
@@ -248,17 +250,17 @@ public class GameStateManager : MonoBehaviour {
 		//show roll dice menu
 		//show dice value
 		//show Move direction menu,
+		Debug.LogError("Moving!");
 		StartCoroutine(MoveSequence ());
 		yield return null;
 	}
 
 	//OBTAINS TREASURE WITH ANIMATION
 	IEnumerator GetTreasureSequence(bool t){
-		if(t){//animate treasure into player
-			
-		}
-		else
+		Debug.LogError("Player took treasure? " + t);
 		stateMachine.selectTreasure (t);
+
+		yield return new WaitForSeconds (1.0f);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
 	}
@@ -276,6 +278,7 @@ public class GameStateManager : MonoBehaviour {
 
 	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
 	IEnumerator DestinationReachedSequence(){
+		yield return new WaitForSeconds (1.0f);
 		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure
 			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
 		} else {
@@ -302,8 +305,13 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	IEnumerator EndTurnSequence(){
+
+		Debug.LogError (stateMachine.currentTurnState);
+		Debug.LogError ("End turn");
 		stateMachine.endTurn ();
-		yield return null;
+		Debug.LogError ("Beginning new turn");
+		yield return new WaitForSeconds(2.0f);
+		StartCoroutine (StartTurnSequence ());
 		//animates ending turn
 		//>  Start Turn Sequence
 	}

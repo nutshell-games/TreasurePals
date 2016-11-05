@@ -8,7 +8,7 @@ public class SubAnimator : MonoBehaviour {
 	public GameObject diver3;
 	public GameObject diver4;
 	[SerializeField]
-	private floatingSub subScript;
+	public floatingSub subScript;
 
 	[SerializeField]
 	public GameObject divingBubbles;
@@ -78,7 +78,7 @@ public class SubAnimator : MonoBehaviour {
 
 	public void MoveDiverTo(GameObject diver, Transform location){
 		Debug.LogError ("Destination is " + location.gameObject);
-			iTween.MoveTo (diver, location.transform.position, 0.2f);
+		iTween.MoveTo (diver, location.transform.position, 0.2f);
 	}
 	#endregion
 }

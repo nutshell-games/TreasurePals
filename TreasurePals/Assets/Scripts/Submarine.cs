@@ -46,8 +46,12 @@ public class Submarine : MonoBehaviour {
 	}
 
 	public void MoveDiverToSpot(int diverIndex, int locationIndex){
-		//NEED TO DO THIS AGAIN TO ACCOUNT FOR ALL TREASURES
-		subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasureManager.instance.TreasureLocations [locationIndex]);
+		if (locationIndex == -1) {
+			subAnim.MoveDiverTo (ListOfDivers [diverIndex], subAnim.subScript.transform);
+		} else {
+			//NEED TO DO THIS AGAIN TO ACCOUNT FOR ALL TREASURES
+			subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasureManager.instance.TreasureLocations [locationIndex - 1]);
+		}
 	}
 
 	void MoveDiverToSubmarine(){
