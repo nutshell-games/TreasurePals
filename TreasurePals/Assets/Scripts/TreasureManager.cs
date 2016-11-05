@@ -6,16 +6,11 @@ public class TreasureManager : MonoBehaviour {
 	public static TreasureManager instance;
 
 	public List<Transform> TreasureLocations = new List<Transform>();
+
+	public List<GameObject> TreasuresUI = new List<GameObject> ();
 	[SerializeField]
-	private GameObject Tier1TreasurePrefab;
-	[SerializeField]
-	private GameObject Tier2TreasurePrefab;
-	[SerializeField]
-	private GameObject Tier3TreasurePrefab;
-	[SerializeField]
-	private GameObject Tier4TreasurePrefab;
-	[SerializeField]
-	private GameObject Tier5TreasurePrefab;
+	private GameObject TreasurePrefabUI;
+
 
 
 	void Awake(){
@@ -42,34 +37,25 @@ public class TreasureManager : MonoBehaviour {
 		List<TreasureLocation> treasureLocationReference = GameStateManager.instance.stateMachine.treasureLocations;
 		int numTreasures = treasureLocationReference.Count;
 		for (int i = 0; i < numTreasures; i++) {
-			GameObject prefabRef = null;
-			switch (treasureLocationReference [i].treasure.type) {
-			case TreasureType.A:
-				prefabRef = Tier1TreasurePrefab;
-				break;
-			case TreasureType.B:
-				prefabRef = Tier2TreasurePrefab;
-				break;
-			case TreasureType.C:
-				prefabRef = Tier3TreasurePrefab;
-				break;
-			case TreasureType.D:
-				prefabRef = Tier4TreasurePrefab;
-				break;
-			case TreasureType.E:
-				prefabRef = Tier5TreasurePrefab;
-				break;
-			default:
-				break;
-			}	
-
-			GameObject tp = Instantiate (prefabRef, transform) as GameObject;
-			tp.transform.localScale = prefabRef.transform.localScale;
+			GameObject tp = Instantiate (TreasurePrefabUI, transform) as GameObject;
+			TreasurePrefab tbScript = tp.GetComponent<TreasurePrefab> ();
+			tp.transform.localScale = TreasurePrefabUI.transform.localScale;
 			tp.transform.position = TreasureLocations [i].position;
+			tbScript.SetTreasurePrefabTo (treasureLocationReference [i].treasure.type);
 
-		treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;
+			TreasuresUI.Add (tp);
+			treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;
 
 		}
 	}
+
+	public void RemoveTreasure(int treasureIndex){
+		TreasuresUI [treasureIndex - 1].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (TreasureType.E);
+	}
+
+	public void PlaceTreasure(){
+	
+	}
+
 
 }

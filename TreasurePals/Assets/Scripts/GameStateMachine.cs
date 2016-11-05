@@ -722,7 +722,7 @@ namespace Tabletop
 
 					Debug.Log("new position: " + currentPlayer.currentPosition);
 
-					// player reached end of treasure locations  SHOULD REVERSE CURRENTPLAYER STATE
+					// player reached end of treasure locations  
 					if (currentPlayer.currentPosition >= treasureLocations.Count)
 					{
 						distanceToMove = 0;

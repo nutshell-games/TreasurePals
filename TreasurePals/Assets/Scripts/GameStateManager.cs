@@ -259,7 +259,9 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator GetTreasureSequence(bool t){
 		Debug.LogError("Player took treasure? " + t);
 		stateMachine.selectTreasure (t);
-
+		if (t) {
+			TreasureManager.instance.RemoveTreasure (stateMachine.currentPlayer.currentPosition);
+		}
 		yield return new WaitForSeconds (1.0f);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
@@ -283,6 +285,7 @@ public class GameStateManager : MonoBehaviour {
 			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
 		} else {
 			if (stateMachine.currentPlayer.collectedTreasures.Count > 0) {// //if there is no treasure and player have treasure
+				Debug.LogError("Do you want to drop your treasure?");
 				Menu.OpenDropTreasure ();//player input calls Button_DropTreasure
 			} else {
 				StartCoroutine(EndTurnSequence ());
