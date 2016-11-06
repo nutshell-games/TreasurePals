@@ -57,10 +57,12 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OpenDropTreasure(){
+		DropTreasure.GetComponent<DropTreasure>().PopulateTreasuresButtons();
 		DropTreasure.SetActive (true);
 	}
 
 	public void OpenYesNoTreasure(){
+		
 		YesOrNoTreasure.SetActive (true);
 	}
 

@@ -49,12 +49,19 @@ public class TreasureManager : MonoBehaviour {
 		}
 	}
 
-	public void RemoveTreasure(int treasureIndex){
-		TreasuresUI [treasureIndex - 1].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (TreasureType.E);
+	public void RemoveTreasureFromLocation(){
+		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
+		TreasuresUI [treasureLocationIndex].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (TreasureType.E);
 	}
 
-	public void PlaceTreasure(){
-	
+
+
+	public void PutTreasureBack(int treasureIndex, TreasureType type){
+		Debug.LogError ("Changing treasure Image");
+		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
+		Debug.LogError ("Passing to treasures UI");
+		TreasuresUI [treasureLocationIndex].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (type);
+
 	}
 
 

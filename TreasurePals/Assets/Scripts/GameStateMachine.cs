@@ -691,6 +691,8 @@ namespace Tabletop
 			Debug.Log("applyMovementForCurrentPlayer "+ currentPlayer.color +
 			          " currentPosition: "+currentPlayer.currentPosition+
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
+			//clear current location space of player
+			treasureLocations[currentPlayer.currentPosition].player = null;
 
 			if (currentPlayer.state == PlayerStates.LeavingShip)
 			{

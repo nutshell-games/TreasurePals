@@ -250,7 +250,6 @@ public class GameStateManager : MonoBehaviour {
 		//show roll dice menu
 		//show dice value
 		//show Move direction menu,
-		Debug.LogError("Moving!");
 		StartCoroutine(MoveSequence ());
 		yield return null;
 	}
@@ -260,7 +259,7 @@ public class GameStateManager : MonoBehaviour {
 		Debug.LogError("Player took treasure? " + t);
 		stateMachine.selectTreasure (t);
 		if (t) {
-			TreasureManager.instance.RemoveTreasure (stateMachine.currentPlayer.currentPosition);
+			TreasureManager.instance.RemoveTreasureFromLocation ();
 		}
 		yield return new WaitForSeconds (1.0f);
 		StartCoroutine (EndTurnSequence ());
@@ -281,7 +280,7 @@ public class GameStateManager : MonoBehaviour {
 	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
 	IEnumerator DestinationReachedSequence(){
 		yield return new WaitForSeconds (1.0f);
-		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure
+		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure			
 			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
 		} else {
 			if (stateMachine.currentPlayer.collectedTreasures.Count > 0) {// //if there is no treasure and player have treasure
@@ -293,22 +292,29 @@ public class GameStateManager : MonoBehaviour {
 			//theres no treasure
 		}
 		yield return null;
-
 	}
 
 
 
-	IEnumerator ReturnTreasureSequence(int treasureIndex){
+	IEnumerator ReturnTreasureSequence(int myTreasureIndex, TreasureType type){
+		Debug.LogError ("Returning Treasure");
+		stateMachine.returnTreasure (myTreasureIndex);
+		Debug.LogError ("Returned Treasure..");
+		TreasureManager.instance.PutTreasureBack (myTreasureIndex, type);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
-
-
 		//animates treasure going from player to "empty" treasure location
 		
 	}
 
-	IEnumerator EndTurnSequence(){
+	IEnumerator DontDropTreasureSequence(){
+		
+		StartCoroutine (EndTurnSequence ());
+		
+		yield return null;
+	}
 
+	IEnumerator EndTurnSequence(){
 		Debug.LogError (stateMachine.currentTurnState);
 		Debug.LogError ("End turn");
 		stateMachine.endTurn ();
@@ -339,9 +345,15 @@ public class GameStateManager : MonoBehaviour {
 		StartCoroutine(GetTreasureSequence (t));
 	}
 
-	public void Button_DropTreasure(int treasureIndex){
-		StartCoroutine (ReturnTreasureSequence (treasureIndex));
+	public void Button_DropTreasure(int myTreasureIndex, TreasureType type){
+		Debug.LogError ("Drop Treasure!");
+		StartCoroutine (ReturnTreasureSequence (myTreasureIndex, type));
 	}
+
+	public void Button_DontDropTreasure(){
+		StartCoroutine (DontDropTreasureSequence ());
+	}
+
 	#endregion
 
 
