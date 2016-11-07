@@ -70,7 +70,7 @@ namespace Tabletop
 		int[][] startingTreasures;
 
 		public List<Player> players;
-		public Dictionary<PlayerColors,Player> playersByColor = new Dictionary<PlayerColors,Player>();
+		public Dictionary<PlayerColors,Player> playersByColor;
 
 		public GameStates currentGameState;
 
@@ -79,8 +79,8 @@ namespace Tabletop
 		public PlayerColors[] playerOrder;
 
 		public List<Treasure> treasureQueue;
-		public Stack<Treasure> treasureCollected = new Stack<Treasure> ();
-		public List<Treasure> treasureCaptured = new List<Treasure> ();
+		public Stack<Treasure> treasureCollected;
+		public List<Treasure> treasureCaptured;
 
 		//public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
 		public Dictionary<PlayerColors,List<Treasure>> treasureCapturedReport;
@@ -106,11 +106,8 @@ namespace Tabletop
 
 
 		public StateMachine() {
-
 			players = new List<Player> ();
 
-			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
-			treasureScoredReport = new List<ScoreReport>();
 		}
 
 		// GAME SETUP
@@ -119,6 +116,12 @@ namespace Tabletop
 		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
 			numberOfPlayers = selectedPlayers.Count;
 			Debug.Log ("setupGameForPlayers");
+
+			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
+			playersByColor =new Dictionary<PlayerColors,Player> ();
+			treasureScoredReport = new List<ScoreReport>();
+			treasureCollected = new Stack<Treasure> ();
+			treasureCaptured = new List<Treasure> ();
 
 			foreach (PlayerColors playerColor in selectedPlayers) {				
 				treasureCapturedReport.Add (playerColor, new List<Treasure> ());

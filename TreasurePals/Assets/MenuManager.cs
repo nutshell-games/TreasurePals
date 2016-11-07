@@ -19,6 +19,8 @@ public class MenuManager : MonoBehaviour {
 
 	public GameObject DropTreasure;
 
+	public GameObject EndGameMenu;
+
 	public void OpenNumberOfPlayer(){
 		if (currentAnim != null) {//if the menu is player order
 			currentAnim.SetTrigger ("AwayDown"); // set player order back down
@@ -64,6 +66,10 @@ public class MenuManager : MonoBehaviour {
 	public void OpenYesNoTreasure(){
 		
 		YesOrNoTreasure.SetActive (true);
+	}
+
+	public void OpenEndGameMenu(){
+		EndGameMenu.SetActive (true);
 	}
 
 }

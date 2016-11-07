@@ -172,8 +172,6 @@ public class GameStateManager : MonoBehaviour {
 
 	}
 
-
-
 	public void SelectPlayerOrder(){
 		// number of players selected.
 		//move player selection menu away.
@@ -238,7 +236,9 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator EndGameSequence(){
 		yield return new WaitForSeconds (1.0f);
 		Debug.LogError ("GAME OVER!");
+		Menu.OpenEndGameMenu ();
 	}
+
 	IEnumerator StartTurnSequence(){
 		Debug.LogError ("Beginning new turn");
 
@@ -325,9 +325,7 @@ public class GameStateManager : MonoBehaviour {
 		}
 		yield return null;
 	}
-
-
-
+		
 	IEnumerator ReturnTreasureSequence(int myTreasureIndex, TreasureType type){
 		Debug.LogError ("Returning Treasure");
 		stateMachine.returnTreasure (myTreasureIndex);
@@ -356,6 +354,13 @@ public class GameStateManager : MonoBehaviour {
 		//animates ending turn
 		//>  Start Turn Sequence
 	}
+
+	IEnumerator RestartGameSequence(){
+		Debug.LogError ("Starting new game");
+		yield return new WaitForSeconds (1.0f);
+		StartFirstRound ();
+	}
+
 	#endregion
 
 
@@ -386,6 +391,13 @@ public class GameStateManager : MonoBehaviour {
 		StartCoroutine (DontDropTreasureSequence ());
 	}
 
+	public void Button_RestartGame(){
+		StartCoroutine (RestartGameSequence ());
+	}
+
+	public void Button_QuitGame(){
+		Application.Quit ();
+	}
 	#endregion
 
 
