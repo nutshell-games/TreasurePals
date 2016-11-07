@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Tabletop;
-public class TreasureManager : MonoBehaviour {
-	public static TreasureManager instance;
+public class TreasurePlaceholderManager : MonoBehaviour {
+	public static TreasurePlaceholderManager instance;
 
 	public List<Transform> TreasureLocations = new List<Transform>();
 
-	public List<GameObject> TreasuresUI = new List<GameObject> ();
+	public List<GameObject> TreasurePlaceholders = new List<GameObject> ();
 	[SerializeField]
 	private GameObject TreasurePrefabUI;
 
@@ -32,26 +32,34 @@ public class TreasureManager : MonoBehaviour {
 	}
 
 	//place physical prefabs on treasure spots
-
-	public void TreasurePlacement(){
+	public void TreasurePlaceholderPlacement(){
 		List<TreasureLocation> treasureLocationReference = GameStateManager.instance.stateMachine.treasureLocations;
 		int numTreasures = treasureLocationReference.Count;
 		for (int i = 0; i < numTreasures; i++) {
-			GameObject tp = Instantiate (TreasurePrefabUI, transform) as GameObject;
-			TreasurePrefab tbScript = tp.GetComponent<TreasurePrefab> ();
-			tp.transform.localScale = TreasurePrefabUI.transform.localScale;
-			tp.transform.position = TreasureLocations [i].position;
-			tbScript.SetTreasurePrefabTo (treasureLocationReference [i].treasure.type);
-
-			TreasuresUI.Add (tp);
-			treasureLocationReference [i].physicalLocation = TreasureLocations [i].gameObject;
+			if (treasureLocationReference [i].treasure != null) {
+				GameObject tp = Instantiate (TreasurePrefabUI, transform) as GameObject;
+				TreasurePlaceholderPrefab tbScript = tp.GetComponent<TreasurePlaceholderPrefab> ();
+				tp.transform.localScale = TreasurePrefabUI.transform.localScale;
+				tp.transform.position = TreasureLocations [i].position;
+				tbScript.SetTreasurePrefabTo (treasureLocationReference [i].treasure.type);
+				TreasurePlaceholders.Add (tp);
+			}
 
 		}
 	}
 
+	public IEnumerator DestroyAllTreasurePlaceHolder(){
+		Debug.LogError ("Destroying all placeholders..");
+		yield return new WaitForSeconds (2.0f);
+		for (int i = TreasurePlaceholders.Count - 1; i >= 0; i--) {
+			Destroy (TreasurePlaceholders [i]);
+		}
+		TreasurePlaceholders.Clear ();
+	}
+
 	public void RemoveTreasureFromLocation(){
 		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
-		TreasuresUI [treasureLocationIndex].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (TreasureType.E);
+		TreasurePlaceholders [treasureLocationIndex].GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (TreasureType.E);
 	}
 
 
@@ -60,7 +68,7 @@ public class TreasureManager : MonoBehaviour {
 		Debug.LogError ("Changing treasure Image");
 		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
 		Debug.LogError ("Passing to treasures UI");
-		TreasuresUI [treasureLocationIndex].GetComponent<TreasurePrefab> ().SetTreasurePrefabTo (type);
+		TreasurePlaceholders [treasureLocationIndex].GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (type);
 
 	}
 

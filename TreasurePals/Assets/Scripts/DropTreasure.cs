@@ -23,6 +23,7 @@ public class DropTreasure : MonoBehaviour {
 			btn.transform.localScale = new Vector3 (1f, 1f, 1f);
 			int treasureIndex = i;
 			TreasureType t = personsTreasure [treasureIndex].type;
+			btn.GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (t);
 			Debug.LogError ("Adding index value to button listener " + i);
 			btn.GetComponent<Button> ().onClick.AddListener (() => Debug.LogError ("Dropping treasure, " + treasureIndex));
 			btn.GetComponent<Button> ().onClick.AddListener (() => Debug.LogError (personsTreasure [treasureIndex]));

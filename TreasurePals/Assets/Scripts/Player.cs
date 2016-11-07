@@ -52,6 +52,7 @@ namespace Tabletop
 		{
 			currentPosition = 0;
 			state = PlayerStates.LeavingShip;
+			collectedTreasures.Clear ();
 		}
 	}
 }

@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 using Tabletop;
-public class TreasurePrefab : MonoBehaviour {
+public class TreasurePlaceholderPrefab : MonoBehaviour {
 	
 	[SerializeField]
 	private Sprite Tier1Sprite;
@@ -14,6 +14,8 @@ public class TreasurePrefab : MonoBehaviour {
 	private Sprite Tier4Sprite;
 	[SerializeField]
 	private Sprite Tier5Sprite;
+	[SerializeField]
+	private Sprite Tier6Sprite;
 
 	public Image myImage;
 
@@ -38,6 +40,10 @@ public class TreasurePrefab : MonoBehaviour {
 		case TreasureType.E:
 			myImage.sprite = Tier5Sprite;
 			
+			break;
+		case TreasureType.F:
+			myImage.sprite = Tier6Sprite;
+
 			break;
 		default:
 			break;

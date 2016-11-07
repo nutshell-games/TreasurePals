@@ -22,6 +22,14 @@ public class Submarine : MonoBehaviour {
 		subAnim.AllAboard ();
 	}
 
+	public IEnumerator DestroyAllDivers(){
+		Debug.LogError ("Destroying all diver placeholders");
+		yield return new WaitForSeconds (2.0f);
+		for (int i = ListOfDivers.Count - 1; i >= 0; i--) {
+			Destroy (ListOfDivers [i]);
+		}
+		ListOfDivers.Clear ();
+	}
 
 	public IEnumerator UnloadDivers(int numOfDivers){
 		CreateDivers (numOfDivers);
@@ -50,7 +58,7 @@ public class Submarine : MonoBehaviour {
 			subAnim.MoveDiverTo (ListOfDivers [diverIndex], subAnim.subScript.transform);
 		} else {
 			//NEED TO DO THIS AGAIN TO ACCOUNT FOR ALL TREASURES
-			subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasureManager.instance.TreasureLocations [locationIndex - 1]);
+			subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasurePlaceholderManager.instance.TreasureLocations [locationIndex - 1]);
 		}
 	}
 
