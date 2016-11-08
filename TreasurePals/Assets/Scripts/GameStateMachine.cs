@@ -323,7 +323,7 @@ namespace Tabletop
 		}
 
 
-		Treasure createComboTreasure(List<Treasure> treasures)
+		public Treasure createComboTreasure(List<Treasure> treasures)
 		{
 
 			int comboValue = 0;
@@ -331,11 +331,11 @@ namespace Tabletop
 			{
 				comboValue += treasure.value;
 			}
-
+			Debug.LogError ("Creating new treasure with value " + comboValue);
 			return new Treasure(TreasureType.F, comboValue, treasures.Count);
 		}
 
-		List<Treasure> takeTreasuresToCombo(Stack<Treasure> collectedTreasures)
+		public List<Treasure> takeTreasuresToCombo(Stack<Treasure> collectedTreasures)
 		{
 			if (collectedTreasures.Count == 0)
 			{
@@ -395,19 +395,17 @@ namespace Tabletop
 			Debug.LogError ("treasure queue count after adjusting " + treasureQueue.Count);
 
 			// redistribute collected treasures into groups of 3 treasures at bottom of sea
-			List<Treasure> group = takeTreasuresToCombo(this.treasureCollected);
+			List<Treasure> group;
+
 			while ((group = takeTreasuresToCombo(this.treasureCollected))!= null)
 			{
 				treasureQueue.Add(createComboTreasure(group));
 			}
 
 			// reset treasure locations
-			for (var t = 0; t < treasureLocations.Count; t++) {
-				treasureLocations [t].treasure = null;
-				treasureLocations [t].player = null;
-				treasureLocations [t].active = false;
-			}
+			treasureLocations.Clear();
 			for (int t = 0; t < treasureQueue.Count; t++) {
+				treasureLocations.Add(new TreasureLocation());
 				treasureLocations[t].treasure = treasureQueue[t];
 				treasureLocations[t].player = null;
 				treasureLocations[t].active = true;
@@ -688,6 +686,7 @@ namespace Tabletop
 			Debug.Log("applyMovementForCurrentPlayer "+ currentPlayer.color +
 			          " currentPosition: "+currentPlayer.currentPosition+
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
+			Debug.LogError ("Maximum Treasure location is " + treasureLocations.Count);
 			//clear current location space of player
 			treasureLocations[currentPlayer.currentPosition].player = null;
 
@@ -726,6 +725,7 @@ namespace Tabletop
 					{
 						distanceToMove = 0;
 						currentPlayer.returnToShip();
+						currentPlayer.currentPosition = treasureLocations.Count;
 						break;
 					}
 
@@ -740,7 +740,6 @@ namespace Tabletop
 					}
 
 					Debug.Log("currentPlayer position: " + currentPlayer.currentPosition);
-
 
 					// skip over location occupied by player
 					if (treasureLocations [currentPlayer.currentPosition].player==null) {
@@ -761,7 +760,6 @@ namespace Tabletop
 
 			}
 			if (currentPlayer.currentPosition >= 0) {
-				Debug.Log ("Current Player position is " + currentPlayer.currentPosition);
 				TreasureLocation locationAfterMovement = treasureLocations [currentPlayer.currentPosition];
 				locationAfterMovement.player = currentPlayer;
 			}
@@ -801,7 +799,6 @@ namespace Tabletop
 
 			if (willCollectTreasure)
 			{
-				Debug.Log("collecting treasure");
 				TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 				// player collects treasure
@@ -809,12 +806,14 @@ namespace Tabletop
 				currentTreasure.collect(currentPlayer);
 				currentPlayer.collectedTreasures.Add(currentTreasure);
 
-				treasureCollected.Push(currentTreasure);
+				//treasureCollected.Push(currentTreasure);
 
 				// clear treasure at location
 				currentLocation.treasure = null;
 
 				currentTurnState = TurnStates.TreasureCollected;
+
+				Debug.Log("collecting treasure, with value " + currentTreasure.value);
 			}
 			else 
 			{

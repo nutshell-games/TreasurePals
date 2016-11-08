@@ -42,9 +42,9 @@ public class Submarine : MonoBehaviour {
 	/// <param name="numOfDivers">Number of divers.</param>
 	public IEnumerator UnloadDivers(int numOfDivers){
 		CreateDivers (numOfDivers);
-		yield return new WaitForSeconds (0.5f);
+		yield return new WaitForSeconds (0.1f);
 		subAnim.AllExit (ListOfDivers, ListOfPositions);	
-		yield return new WaitForSeconds (0.5f);
+		yield return new WaitForSeconds (0.1f);
 	}
 
 
@@ -52,10 +52,11 @@ public class Submarine : MonoBehaviour {
 		for (int i = ListOfDivers.Count-1; i >= 0; i--) {
 			Destroy (ListOfDivers [i]);
 		}
-		foreach(Transform child in PositionParent.transform){
-			Destroy (child.gameObject);
+		for (int i = ListOfPositions.Count-1; i >= 0; i--) {
+			Destroy (ListOfPositions [i]);
 		}
 		ListOfDivers.Clear ();
+		ListOfPositions.Clear ();
 		//create position placeholders;
 		for (int i = 0; i < num; i++) {
 			ListOfPositions.Add(Instantiate (PositionPrefab, PositionParent.transform) as GameObject);
@@ -75,7 +76,7 @@ public class Submarine : MonoBehaviour {
 			subAnim.MoveDiverTo (ListOfDivers [diverIndex], subAnim.subScript.transform);
 		} else {
 			//NEED TO DO THIS AGAIN TO ACCOUNT FOR ALL TREASURES
-			subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasurePlaceholderManager.instance.TreasureLocations [locationIndex - 1]);
+			subAnim.MoveDiverTo (ListOfDivers [diverIndex], TreasurePlaceholderManager.instance.TreasureLocations [locationIndex]);
 		}
 	}
 

@@ -77,7 +77,6 @@ public class SubAnimator : MonoBehaviour {
 	#region diverMovements
 
 	public void MoveDiverTo(GameObject diver, Transform location){
-		Debug.LogError ("Destination is " + location.gameObject);
 		iTween.MoveTo (diver, location.transform.position, 0.2f);
 	}
 	#endregion

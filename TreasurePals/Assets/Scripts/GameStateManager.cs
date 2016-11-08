@@ -10,6 +10,7 @@ public class GameStateManager : MonoBehaviour {
 	public StateMachine stateMachine = new StateMachine();
 	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
 
+
 	public Submarine subScript; //submarine script..controls submarine animations, contains list of Player UI elements
 	public MenuManager Menu; // Menu's script
 
@@ -22,7 +23,6 @@ public class GameStateManager : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-
 		if (Input.GetKeyDown ("l")) {
 			OpeningSequence ();
 		}
@@ -220,16 +220,16 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator StartRoundSequence(){
 		Debug.LogError ("Beginning new round");
 		yield return new WaitForSeconds (1.0f);
-		if (stateMachine.currentGameState != GameStates.GameEnded) {
+		if (stateMachine.currentGameState == GameStates.GameEnded) {
+			StartCoroutine (EndGameSequence ());
+		} else {
 			stateMachine.startNextRound ();
 			//unboards divers 
 			//start turn sequence
 			yield return StartCoroutine (subScript.UnloadDivers (stateMachine.numberOfPlayers));
-			yield return new WaitForSeconds (1.0f);
+			yield return new WaitForSeconds (0.1f);
 			TreasurePlaceholderManager.instance.TreasurePlaceholderPlacement ();
 			StartCoroutine (StartTurnSequence ());
-		} else {
-			StartCoroutine (EndGameSequence ());
 		}
 	}
 
@@ -293,7 +293,7 @@ public class GameStateManager : MonoBehaviour {
 		if (t) {
 			TreasurePlaceholderManager.instance.RemoveTreasureFromLocation ();
 		}
-		yield return new WaitForSeconds (1.0f);
+		yield return new WaitForSeconds (0.1f);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
 	}
@@ -349,7 +349,7 @@ public class GameStateManager : MonoBehaviour {
 		Debug.LogError ("End turn");
 		stateMachine.endTurn ();
 		Debug.LogError ("Beginning new turn");
-		yield return new WaitForSeconds(2.0f);
+		yield return new WaitForSeconds(0.1f);
 		StartCoroutine (StartTurnSequence ());
 		//animates ending turn
 		//>  Start Turn Sequence
@@ -357,7 +357,7 @@ public class GameStateManager : MonoBehaviour {
 
 	IEnumerator RestartGameSequence(){
 		Debug.LogError ("Starting new game");
-		yield return new WaitForSeconds (1.0f);
+		yield return new WaitForSeconds (.1f);
 		StartFirstRound ();
 	}
 
@@ -367,7 +367,7 @@ public class GameStateManager : MonoBehaviour {
 
 
 
-	#region these are used for UI BUTTONS
+	#region buttons - these are used for UI BUTTONS
 	//USER CHOOSE TO GO  UP OR DOWN
 	public void Button_Direction(bool t){
 		if (t) {
