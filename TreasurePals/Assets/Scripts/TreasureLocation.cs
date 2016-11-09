@@ -9,7 +9,10 @@ namespace Tabletop{
 		public Treasure treasure = null;
 		public bool active = true;
 
-		public TreasureLocation () {
+		public TreasureLocation(){
+		}
+		public TreasureLocation (Treasure t) {
+			treasure = t;
 		}
 	}
 }

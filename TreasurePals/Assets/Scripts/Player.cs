@@ -51,7 +51,7 @@ namespace Tabletop
 
 		public void reset()
 		{
-			currentPosition = 0;
+			currentPosition = -1;
 			state = PlayerStates.LeavingShip;
 			collectedTreasures.Clear ();
 		}

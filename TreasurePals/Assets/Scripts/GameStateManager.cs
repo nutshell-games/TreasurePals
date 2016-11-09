@@ -143,6 +143,7 @@ public class GameStateManager : MonoBehaviour {
 
 	//Adds num number of players and add to statemachine
 	public void SetNumPlayers(int num){
+		selectedPlayers.Clear ();
 		switch (num) {
 		case 6:
 			selectedPlayers.Add (PlayerColors.Red);
@@ -209,21 +210,18 @@ public class GameStateManager : MonoBehaviour {
 		//animate player not in subs
 		yield return StartCoroutine(subScript.DestroyAllDivers());
 		yield return StartCoroutine (TreasurePlaceholderManager.instance.DestroyAllTreasurePlaceHolder ());
-		yield return new WaitForSeconds(2.0f);
-		Debug.LogError ("Starting new round");
-
-		yield return new WaitForSeconds (1.0f);
 
 		yield return StartCoroutine (StartRoundSequence ());
 	}
 
 	IEnumerator StartRoundSequence(){
-		Debug.LogError ("Beginning new round");
-		yield return new WaitForSeconds (1.0f);
-		if (stateMachine.currentGameState == GameStates.GameEnded) {
+
+		stateMachine.startNextRound ();
+		Debug.LogError ("Current Gamestate :" + stateMachine.currentGameState);
+		yield return new WaitForSeconds (0.1f);
+		if (stateMachine.currentGameState == GameStates.GameHasWinner || stateMachine.currentGameState == GameStates.GameIsDraw) {
 			StartCoroutine (EndGameSequence ());
 		} else {
-			stateMachine.startNextRound ();
 			//unboards divers 
 			//start turn sequence
 			yield return StartCoroutine (subScript.UnloadDivers (stateMachine.numberOfPlayers));
@@ -311,10 +309,18 @@ public class GameStateManager : MonoBehaviour {
 
 	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
 	IEnumerator DestinationReachedSequence(){
-		yield return new WaitForSeconds (1.0f);
-		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure			
-			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
-		} else {
+		yield return new WaitForSeconds (0.1f);
+		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure		
+			
+			if (stateMachine.currentPlayer.currentPosition == stateMachine.treasureLocations.Count - 1) {
+				StartCoroutine (GetTreasureSequence (true));
+			}
+			else
+				Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
+
+
+		} 
+		else {
 			if (stateMachine.currentPlayer.collectedTreasures.Count > 0) {// //if there is no treasure and player have treasure
 				Debug.LogError("Do you want to drop your treasure?");
 				Menu.OpenDropTreasure ();//player input calls Button_DropTreasure
@@ -348,7 +354,6 @@ public class GameStateManager : MonoBehaviour {
 		Debug.LogError (stateMachine.currentTurnState);
 		Debug.LogError ("End turn");
 		stateMachine.endTurn ();
-		Debug.LogError ("Beginning new turn");
 		yield return new WaitForSeconds(0.1f);
 		StartCoroutine (StartTurnSequence ());
 		//animates ending turn

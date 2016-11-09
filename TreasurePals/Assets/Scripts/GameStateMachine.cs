@@ -114,15 +114,24 @@ namespace Tabletop
 		//===========
 
 		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
-			numberOfPlayers = selectedPlayers.Count;
 			Debug.Log ("setupGameForPlayers");
-
+			currentTurnState = TurnStates.TurnEnded;
+			currentRoundState = RoundStates.RoundEnded;
+			currentGameState = GameStates.SetupInProgress;
+			numberOfPlayers = selectedPlayers.Count;
+			currentRound = 0;
+			currentAir = 0;
+			currentPlayerIndex = 0;
+			currentPlayerRoll = 0;
+			currentPlayerMovement = 0;
+			lastRoll = 0;
+			winner = null;
+			firstPlayer = 0;
 			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
 			playersByColor =new Dictionary<PlayerColors,Player> ();
 			treasureScoredReport = new List<ScoreReport>();
 			treasureCollected = new Stack<Treasure> ();
 			treasureCaptured = new List<Treasure> ();
-
 			foreach (PlayerColors playerColor in selectedPlayers) {				
 				treasureCapturedReport.Add (playerColor, new List<Treasure> ());
 				playersByColor.Add(playerColor, spawnPlayer(playerColor));
@@ -382,7 +391,7 @@ namespace Tabletop
 
 			Debug.Log("treasures captured:" + treasureCaptured.Count);
 			Debug.Log("treasures collected:" + treasureCollected.Count);
-			Debug.LogError ("treasure queue count before adjusting " + treasureQueue.Count);
+			/*
 			foreach (Treasure treasure in treasureQueue.ToList())
 			{
 				if (treasure.state == TreasureStates.Collected ||
@@ -390,28 +399,31 @@ namespace Tabletop
 				{
 					treasureQueue.Remove(treasure);
 				}
-			}
+			}*/
 
-			Debug.LogError ("treasure queue count after adjusting " + treasureQueue.Count);
 
-			// redistribute collected treasures into groups of 3 treasures at bottom of sea
-			List<Treasure> group;
-
-			while ((group = takeTreasuresToCombo(this.treasureCollected))!= null)
-			{
-				treasureQueue.Add(createComboTreasure(group));
-			}
+		
 
 			// reset treasure locations
-			treasureLocations.Clear();
-			for (int t = 0; t < treasureQueue.Count; t++) {
-				treasureLocations.Add(new TreasureLocation());
-				treasureLocations[t].treasure = treasureQueue[t];
+			treasureLocations = treasureLocations.Where(x => x.treasure != null).ToList();
+			// redistribute collected treasures into groups of 3 treasures at bottom of sea
+
+				
+			treasureQueue.Clear ();
+			for (int t = 0; t < treasureLocations.Count; t++) {
+				//treasureLocations[t].treasure = treasureQueue[t];
 				treasureLocations[t].player = null;
 				treasureLocations[t].active = true;
+				treasureQueue.Add(treasureLocations[t].treasure);
 			}		
 
-
+			List<Treasure> group;
+			while ((group = takeTreasuresToCombo(this.treasureCollected))!= null)
+			{
+				Treasure newTreasure = createComboTreasure (group);
+				treasureQueue.Add(newTreasure);
+				treasureLocations.Add (new TreasureLocation (newTreasure));
+			}
 		}
 
 
@@ -666,15 +678,17 @@ namespace Tabletop
 					return;
 				}
 
-				if (currentPlayer.currentPosition >= 0) {
-					if (getTreasureAtCurrentPlayerLocation ()) {
-						currentTurnState = TurnStates.TreasureAvailable;
-					} else {
-						currentTurnState = TurnStates.TreasureUnavailable;
-					} 
-				}
+			
 
-			} else {
+			} 	
+			if (currentPlayer.currentPosition >= 0) {
+				if (getTreasureAtCurrentPlayerLocation ()) {
+					currentTurnState = TurnStates.TreasureAvailable;
+				} else {
+					currentTurnState = TurnStates.TreasureUnavailable;
+				} 
+			}
+			else {
 				currentTurnState = TurnStates.PlayerMoved;
 			}
 
@@ -688,8 +702,9 @@ namespace Tabletop
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
 			Debug.LogError ("Maximum Treasure location is " + treasureLocations.Count);
 			//clear current location space of player
-			treasureLocations[currentPlayer.currentPosition].player = null;
-
+			if (currentPlayer.currentPosition != -1) {
+				treasureLocations [currentPlayer.currentPosition].player = null;
+			}
 			if (currentPlayer.state == PlayerStates.LeavingShip)
 			{
 				currentPlayer.state = PlayerStates.Diving;
@@ -725,11 +740,11 @@ namespace Tabletop
 					{
 						distanceToMove = 0;
 						currentPlayer.returnToShip();
-						currentPlayer.currentPosition = treasureLocations.Count;
+						currentPlayer.currentPosition = treasureLocations.Count-1;
 						break;
 					}
 
-					else if (currentPlayer.currentPosition <= 0)
+					else if (currentPlayer.currentPosition < 0)
 					{
 						Debug.LogError ("MADE IT HOME!");
 						distanceToMove = 0;
@@ -784,8 +799,10 @@ namespace Tabletop
 			//                        currentLocation.treasure.value));
 
 			if (currentLocation.treasure == null) {
+				Debug.LogError ("There is no treasure here");
 				return false;
 			} else {
+				Debug.LogError ("There is treasure here");
 				return true;
 			}
 		}
@@ -833,8 +850,7 @@ namespace Tabletop
 			{
 				throw new System.Exception("current location has treasure.");
 			}
-			else if (currentPlayer.collectedTreasures.ElementAt(collectedTreasureIndex)
-					 == null)
+			else if (currentPlayer.collectedTreasures.ElementAt(collectedTreasureIndex) == null)
 			{
 				throw new System.Exception("no collected treasure at this index");
 			}

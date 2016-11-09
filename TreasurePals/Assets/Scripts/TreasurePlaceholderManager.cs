@@ -50,7 +50,7 @@ public class TreasurePlaceholderManager : MonoBehaviour {
 
 	public IEnumerator DestroyAllTreasurePlaceHolder(){
 		Debug.LogError ("Destroying all placeholders..");
-		yield return new WaitForSeconds (2.0f);
+		yield return new WaitForSeconds (0.2f);
 		for (int i = TreasurePlaceholders.Count - 1; i >= 0; i--) {
 			Destroy (TreasurePlaceholders [i]);
 		}
@@ -58,7 +58,7 @@ public class TreasurePlaceholderManager : MonoBehaviour {
 	}
 
 	public void RemoveTreasureFromLocation(){
-		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
+		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition;
 		TreasurePlaceholders [treasureLocationIndex].GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (TreasureType.E);
 	}
 
@@ -66,7 +66,7 @@ public class TreasurePlaceholderManager : MonoBehaviour {
 
 	public void PutTreasureBack(int treasureIndex, TreasureType type){
 		Debug.LogError ("Changing treasure Image");
-		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition - 1;
+		int treasureLocationIndex = GameStateManager.instance.stateMachine.currentPlayer.currentPosition;
 		Debug.LogError ("Passing to treasures UI");
 		TreasurePlaceholders [treasureLocationIndex].GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (type);
 

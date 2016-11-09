@@ -28,7 +28,7 @@ public class Submarine : MonoBehaviour {
 	/// <returns>The all divers.</returns>
 	public IEnumerator DestroyAllDivers(){
 		Debug.LogError ("Destroying all diver placeholders");
-		yield return new WaitForSeconds (2.0f);
+		yield return new WaitForSeconds (0.2f);
 		for (int i = ListOfDivers.Count - 1; i >= 0; i--) {
 			Destroy (ListOfDivers [i]);
 		}
