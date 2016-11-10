@@ -21,6 +21,7 @@ public class GameStateManager : MonoBehaviour {
 			Destroy (this);
 	}
 
+
 	// Update is called once per frame
 	void Update () {
 		if (Input.GetKeyDown ("l")) {
@@ -137,6 +138,7 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator OpenNumPlayerMenuWithDelay (){
 		Debug.LogError ("Opening menus in 3 seconds");
 		yield return new WaitForSeconds (3.0f);
+		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.setting);
 		//subScript.DisableBubbles ();
 		Menu.OpenNumberOfPlayer ();
 	}
@@ -180,8 +182,10 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	public void StartFirstRound(){
+		
 		SetNumPlayers (2);
 		Menu.CloseMenus ();
+		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.game);
 		StartCoroutine (StartFirstRoundSequence ());
 		//animate submarine to the top,
 		//spawn divers = number of players while animating them.
@@ -208,6 +212,7 @@ public class GameStateManager : MonoBehaviour {
 		//close sub.
 		//destroy player placeholders that are in sub
 		//animate player not in subs
+		subScript.ToggleDisplayAir(false);
 		yield return StartCoroutine(subScript.DestroyAllDivers());
 		yield return StartCoroutine (TreasurePlaceholderManager.instance.DestroyAllTreasurePlaceHolder ());
 
@@ -227,6 +232,7 @@ public class GameStateManager : MonoBehaviour {
 			yield return StartCoroutine (subScript.UnloadDivers (stateMachine.numberOfPlayers));
 			yield return new WaitForSeconds (0.1f);
 			TreasurePlaceholderManager.instance.TreasurePlaceholderPlacement ();
+			subScript.ToggleDisplayAir (true);
 			StartCoroutine (StartTurnSequence ());
 		}
 	}
@@ -244,7 +250,9 @@ public class GameStateManager : MonoBehaviour {
 			yield return StartCoroutine (EndRoundSequence ());
 		} 
 		else {
+			
 			//if we can still go, continue, if not start new round sequence;
+			Menu.ToggleScrollControl(true);
 			stateMachine.startNextTurn ();
 			//determines whether or not to open menu
 			if (stateMachine.isCurrentPlayerDiving () && stateMachine.currentPlayer.collectedTreasures.Count > 0) { // if player is DIVING and POSSES treasures,
@@ -353,6 +361,7 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator EndTurnSequence(){
 		Debug.LogError (stateMachine.currentTurnState);
 		Debug.LogError ("End turn");
+		Menu.ToggleScrollControl (false);
 		stateMachine.endTurn ();
 		yield return new WaitForSeconds(0.1f);
 		StartCoroutine (StartTurnSequence ());

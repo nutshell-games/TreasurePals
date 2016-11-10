@@ -14,14 +14,23 @@ public class Submarine : MonoBehaviour {
 
 	[SerializeField]
 	public SubAnimator subAnim;
+	[SerializeField]
+	private Text AirIndicatorSub;
+	[SerializeField]
+	private Text AirIndicatorMenu;
 
 	public List<GameObject> ListOfDivers = new List<GameObject>();
 	public List<GameObject> ListOfPositions = new List<GameObject> ();
 
 
+	void Start(){
+		GameStateManager.instance.stateMachine.AirDelegate += AirLevel;
+	}
+	
 	public void Dive(){
 		subAnim.AllAboard ();
 	}
+
 	/// <summary>
 	/// Removes diver placeholders
 	/// </summary>
@@ -84,4 +93,13 @@ public class Submarine : MonoBehaviour {
 	
 	}
 
+
+	public void AirLevel(int n){
+		AirIndicatorSub.text = n.ToString();
+		AirIndicatorMenu.text = "Air: " + n.ToString();
+	}
+
+	public void ToggleDisplayAir(bool t){
+		AirIndicatorSub.gameObject.SetActive (t);
+	}
 }

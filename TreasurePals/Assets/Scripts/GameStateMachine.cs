@@ -59,7 +59,8 @@ namespace Tabletop
 
 	public class StateMachine {
 
-
+		public delegate void Air (int n);
+		public Air AirDelegate;
 		static int maxRounds = 3;
 		static int maxAir = 25;
 		static int maxRoll = 6;
@@ -107,12 +108,14 @@ namespace Tabletop
 
 		public StateMachine() {
 			players = new List<Player> ();
-
+			AirDelegate += UpdateCurrentAirLevel;
 		}
 
 		// GAME SETUP
 		//===========
-
+		public void UpdateCurrentAirLevel(int n){
+			currentAir = n;
+		}
 		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
 			Debug.Log ("setupGameForPlayers");
 			currentTurnState = TurnStates.TurnEnded;
@@ -120,7 +123,7 @@ namespace Tabletop
 			currentGameState = GameStates.SetupInProgress;
 			numberOfPlayers = selectedPlayers.Count;
 			currentRound = 0;
-			currentAir = 0;
+			AirDelegate (0);
 			currentPlayerIndex = 0;
 			currentPlayerRoll = 0;
 			currentPlayerMovement = 0;
@@ -140,6 +143,7 @@ namespace Tabletop
 			generateStartingTreasures ();
 			setupTreasures ();
 		}
+
 
 
 		private void generateStartingTreasures () {
@@ -467,7 +471,7 @@ namespace Tabletop
 			if (currentRound < maxRounds) {
 				currentRound++;
 				currentRoundState = RoundStates.RoundStarted;
-				currentAir = maxAir;
+				AirDelegate(maxAir);
 				Debug.Log(String.Format("Round started: {0} roundState {1} maxAir {2}",
 				                        currentRound,currentRoundState,currentAir));
 
@@ -521,7 +525,7 @@ namespace Tabletop
 
 			// deduct air
 			currentAir -= currentPlayer.collectedTreasures.Count;
-
+			AirDelegate (currentAir);
 			// check if round over
 			if (currentAir <= 0)
 			{
