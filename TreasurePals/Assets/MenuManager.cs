@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class MenuManager : MonoBehaviour {
 	[SerializeField]
@@ -10,7 +11,8 @@ public class MenuManager : MonoBehaviour {
 	private Animator settingAnim;
 	[SerializeField]
 	private Animator treasureAnim;
-
+	[SerializeField]
+	private ScrollRect mainRect;
 	private Animator currentAnim;
 
 	public GameObject GoUpOrDownMenu;
@@ -18,6 +20,9 @@ public class MenuManager : MonoBehaviour {
 	public GameObject YesOrNoTreasure;
 
 	public GameObject DropTreasure;
+
+	public GameObject EndGameMenu;
+
 
 	public void OpenNumberOfPlayer(){
 		if (currentAnim != null) {//if the menu is player order
@@ -57,11 +62,21 @@ public class MenuManager : MonoBehaviour {
 	}
 
 	public void OpenDropTreasure(){
+		DropTreasure.GetComponent<DropTreasure>().PopulateTreasuresButtons();
 		DropTreasure.SetActive (true);
 	}
 
 	public void OpenYesNoTreasure(){
+		
 		YesOrNoTreasure.SetActive (true);
+	}
+
+	public void OpenEndGameMenu(){
+		EndGameMenu.SetActive (true);
+	}
+
+	public void ToggleScrollControl(bool t){
+		mainRect.vertical = t;
 	}
 
 }

@@ -20,17 +20,19 @@ namespace Tabletop
 		public ScoreReport(PlayerColors color)
 		{
 			this.color = color;
+			treasureTypeTotals = new Dictionary<TreasureType, int> ();
 		}
 
 		public void getTreasureTypeTotals(List<Treasure> capturedTreasures)
 		{
 			totalTreasures = capturedTreasures.Count;
 
-			treasureTypeTotals[TreasureType.A] = 0;
-			treasureTypeTotals[TreasureType.B] = 0;
-			treasureTypeTotals[TreasureType.C] = 0;
-			treasureTypeTotals[TreasureType.D] = 0;
-			treasureTypeTotals[TreasureType.F] = 0;
+			treasureTypeTotals.Add (TreasureType.A,0);
+			treasureTypeTotals.Add (TreasureType.B,0);
+			treasureTypeTotals.Add (TreasureType.C,0);
+			treasureTypeTotals.Add (TreasureType.D,0);
+			treasureTypeTotals.Add (TreasureType.E,0);
+			treasureTypeTotals.Add (TreasureType.F,0);
 
 			foreach (Treasure treasure in capturedTreasures)
 			{
@@ -57,7 +59,8 @@ namespace Tabletop
 
 	public class StateMachine {
 
-
+		public delegate void Air (int n);
+		public Air AirDelegate;
 		static int maxRounds = 3;
 		static int maxAir = 25;
 		static int maxRoll = 6;
@@ -68,7 +71,7 @@ namespace Tabletop
 		int[][] startingTreasures;
 
 		public List<Player> players;
-		public Dictionary<PlayerColors,Player> playersByColor = new Dictionary<PlayerColors,Player>();
+		public Dictionary<PlayerColors,Player> playersByColor;
 
 		public GameStates currentGameState;
 
@@ -76,15 +79,15 @@ namespace Tabletop
 
 		public PlayerColors[] playerOrder;
 
-		public List<Treasure> treasureQueue = new List<Treasure> ();
-		public Stack<Treasure> treasureCollected = new Stack<Treasure> ();
-		public List<Treasure> treasureCaptured = new List<Treasure> ();
+		public List<Treasure> treasureQueue;
+		public Stack<Treasure> treasureCollected;
+		public List<Treasure> treasureCaptured;
 
 		//public Dictionary<PlayerColors,List<Treasure>> treasureCollectedReport;
 		public Dictionary<PlayerColors,List<Treasure>> treasureCapturedReport;
 		public List<ScoreReport> treasureScoredReport;
 
-		public List<TreasureLocation> treasureLocations = new List<TreasureLocation> ();
+		public List<TreasureLocation> treasureLocations;
 
 		public RoundStates currentRoundState = RoundStates.RoundEnded;
 		public int currentRound = 0;
@@ -104,22 +107,35 @@ namespace Tabletop
 
 
 		public StateMachine() {
-
 			players = new List<Player> ();
-
-			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
-			treasureScoredReport = new List<ScoreReport>();
+			AirDelegate += UpdateCurrentAirLevel;
 		}
 
 		// GAME SETUP
 		//===========
-
+		public void UpdateCurrentAirLevel(int n){
+			currentAir = n;
+		}
 		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
-			numberOfPlayers = selectedPlayers.Count;
 			Debug.Log ("setupGameForPlayers");
-
-			foreach (PlayerColors playerColor in selectedPlayers) {
-				
+			currentTurnState = TurnStates.TurnEnded;
+			currentRoundState = RoundStates.RoundEnded;
+			currentGameState = GameStates.SetupInProgress;
+			numberOfPlayers = selectedPlayers.Count;
+			currentRound = 0;
+			AirDelegate (0);
+			currentPlayerIndex = 0;
+			currentPlayerRoll = 0;
+			currentPlayerMovement = 0;
+			lastRoll = 0;
+			winner = null;
+			firstPlayer = 0;
+			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
+			playersByColor =new Dictionary<PlayerColors,Player> ();
+			treasureScoredReport = new List<ScoreReport>();
+			treasureCollected = new Stack<Treasure> ();
+			treasureCaptured = new List<Treasure> ();
+			foreach (PlayerColors playerColor in selectedPlayers) {				
 				treasureCapturedReport.Add (playerColor, new List<Treasure> ());
 				playersByColor.Add(playerColor, spawnPlayer(playerColor));
 			}
@@ -127,6 +143,7 @@ namespace Tabletop
 			generateStartingTreasures ();
 			setupTreasures ();
 		}
+
 
 
 		private void generateStartingTreasures () {
@@ -162,7 +179,7 @@ namespace Tabletop
 			Debug.Log ("setup treasures");
 
 			treasureQueue = new List<Treasure> ();
-
+			treasureLocations = new List<TreasureLocation> ();
 			for (var t = 0; t < startingTreasures.GetLength(0); t++) {
 
 				int[] treasuresOfType = startingTreasures [t];
@@ -258,6 +275,7 @@ namespace Tabletop
 			{
 				currentGameState = GameStates.GameHasWinner;
 				winner = playersByColor[highScorers[0].color];
+				Debug.LogError ("The winner is " + winner.color + " ! WITH" + highScorers[0].totalScore);
 
 			}
 			else {
@@ -302,15 +320,10 @@ namespace Tabletop
 		{
 
 			Debug.Log("generateTreasureReport");
-
-			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>>();
-
-
+		
 			foreach (Treasure treasure in treasureCaptured)
 			{
-
 				PlayerColors color = treasure.owner.color;
-
 				treasureCapturedReport[color].Add(treasure);
 			}
 
@@ -323,7 +336,7 @@ namespace Tabletop
 		}
 
 
-		Treasure createComboTreasure(List<Treasure> treasures)
+		public Treasure createComboTreasure(List<Treasure> treasures)
 		{
 
 			int comboValue = 0;
@@ -331,11 +344,11 @@ namespace Tabletop
 			{
 				comboValue += treasure.value;
 			}
-
+			Debug.LogError ("Creating new treasure with value " + comboValue);
 			return new Treasure(TreasureType.F, comboValue, treasures.Count);
 		}
 
-		List<Treasure> takeTreasuresToCombo(Stack<Treasure> collectedTreasures)
+		public List<Treasure> takeTreasuresToCombo(Stack<Treasure> collectedTreasures)
 		{
 			if (collectedTreasures.Count == 0)
 			{
@@ -370,53 +383,51 @@ namespace Tabletop
 				foreach (Treasure treasure in player.capturedTreasures)
 				{
 					treasureCaptured.Add(treasure);
+					Debug.LogError ("Player " + player.color + " received: " + treasure.value + " points");
 				}
 
 				foreach (Treasure aCollectedTreasure in player.collectedTreasures)
 				{
 					treasureCollected.Push(aCollectedTreasure);
 				}
+
 			}
 
 			Debug.Log("treasures captured:" + treasureCaptured.Count);
 			Debug.Log("treasures collected:" + treasureCollected.Count);
-
-			foreach (Treasure treasure in treasureQueue)
+			/*
+			foreach (Treasure treasure in treasureQueue.ToList())
 			{
 				if (treasure.state == TreasureStates.Collected ||
 				    treasure.state == TreasureStates.Captured)
 				{
 					treasureQueue.Remove(treasure);
 				}
-			}
+			}*/
 
+
+		
+
+			// reset treasure locations
+			treasureLocations = treasureLocations.Where(x => x.treasure != null).ToList();
 			// redistribute collected treasures into groups of 3 treasures at bottom of sea
+
+				
+			treasureQueue.Clear ();
+			for (int t = 0; t < treasureLocations.Count; t++) {
+				//treasureLocations[t].treasure = treasureQueue[t];
+				treasureLocations[t].player = null;
+				treasureLocations[t].active = true;
+				treasureQueue.Add(treasureLocations[t].treasure);
+			}		
+
 			List<Treasure> group;
 			while ((group = takeTreasuresToCombo(this.treasureCollected))!= null)
 			{
-				treasureQueue.Add(createComboTreasure(group));
+				Treasure newTreasure = createComboTreasure (group);
+				treasureQueue.Add(newTreasure);
+				treasureLocations.Add (new TreasureLocation (newTreasure));
 			}
-
-
-			// reset treasure locations
-			for (var t = 0; t < treasureLocations.Count; t++)
-			{
-
-				if (treasureQueue.ElementAt(t) != null)
-				{
-					treasureLocations[t].treasure = treasureQueue[t];
-					treasureLocations[t].player = null;
-					treasureLocations[t].active = true;
-				}
-				else {
-					// deactivate empty location
-					treasureLocations[t].treasure = null;
-					treasureLocations[t].player = null;
-					treasureLocations[t].active = false;
-				}
-
-			}
-
 		}
 
 
@@ -460,7 +471,7 @@ namespace Tabletop
 			if (currentRound < maxRounds) {
 				currentRound++;
 				currentRoundState = RoundStates.RoundStarted;
-				currentAir = maxAir;
+				AirDelegate(maxAir);
 				Debug.Log(String.Format("Round started: {0} roundState {1} maxAir {2}",
 				                        currentRound,currentRoundState,currentAir));
 
@@ -514,7 +525,7 @@ namespace Tabletop
 
 			// deduct air
 			currentAir -= currentPlayer.collectedTreasures.Count;
-
+			AirDelegate (currentAir);
 			// check if round over
 			if (currentAir <= 0)
 			{
@@ -671,15 +682,17 @@ namespace Tabletop
 					return;
 				}
 
-				if (currentPlayer.currentPosition >= 0) {
-					if (getTreasureAtCurrentPlayerLocation ()) {
-						currentTurnState = TurnStates.TreasureAvailable;
-					} else {
-						currentTurnState = TurnStates.TreasureUnavailable;
-					} 
-				}
+			
 
-			} else {
+			} 	
+			if (currentPlayer.currentPosition >= 0) {
+				if (getTreasureAtCurrentPlayerLocation ()) {
+					currentTurnState = TurnStates.TreasureAvailable;
+				} else {
+					currentTurnState = TurnStates.TreasureUnavailable;
+				} 
+			}
+			else {
 				currentTurnState = TurnStates.PlayerMoved;
 			}
 
@@ -692,8 +705,11 @@ namespace Tabletop
 			          " currentPosition: "+currentPlayer.currentPosition+
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
 
-			// CLEAR CURRENT PLAYER'S TREASURE LOCATION BEFORE MOVING
-			treasureLocations[currentPlayer.currentPosition].player = null;
+			Debug.LogError ("Maximum Treasure location is " + treasureLocations.Count);
+			//clear current location space of player
+			if (currentPlayer.currentPosition != -1) {
+				treasureLocations [currentPlayer.currentPosition].player = null;
+			}
 
 			if (currentPlayer.state == PlayerStates.LeavingShip)
 			{
@@ -730,11 +746,13 @@ namespace Tabletop
 					{
 						distanceToMove = 0;
 						currentPlayer.returnToShip();
+						currentPlayer.currentPosition = treasureLocations.Count-1;
 						break;
 					}
 
-					else if (currentPlayer.currentPosition <= 0)
+					else if (currentPlayer.currentPosition < 0)
 					{
+						Debug.LogError ("MADE IT HOME!");
 						distanceToMove = 0;
 						Debug.Log ("Exiting While loop");
 						currentPlayer.placeInShip();
@@ -743,7 +761,6 @@ namespace Tabletop
 					}
 
 					Debug.Log("currentPlayer position: " + currentPlayer.currentPosition);
-
 
 					// skip over location occupied by player
 					if (treasureLocations [currentPlayer.currentPosition].player==null) {
@@ -764,7 +781,6 @@ namespace Tabletop
 
 			}
 			if (currentPlayer.currentPosition >= 0) {
-				Debug.Log ("Current Player position is " + currentPlayer.currentPosition);
 				TreasureLocation locationAfterMovement = treasureLocations [currentPlayer.currentPosition];
 				locationAfterMovement.player = currentPlayer;
 			}
@@ -789,8 +805,10 @@ namespace Tabletop
 			//                        currentLocation.treasure.value));
 
 			if (currentLocation.treasure == null) {
+				Debug.LogError ("There is no treasure here");
 				return false;
 			} else {
+				Debug.LogError ("There is treasure here");
 				return true;
 			}
 		}
@@ -804,7 +822,6 @@ namespace Tabletop
 
 			if (willCollectTreasure)
 			{
-				Debug.Log("collecting treasure");
 				TreasureLocation currentLocation = treasureLocations[currentPlayer.currentPosition];
 
 				// player collects treasure
@@ -812,12 +829,14 @@ namespace Tabletop
 				currentTreasure.collect(currentPlayer);
 				currentPlayer.collectedTreasures.Add(currentTreasure);
 
-				treasureCollected.Push(currentTreasure);
+				//treasureCollected.Push(currentTreasure);
 
 				// clear treasure at location
 				currentLocation.treasure = null;
 
 				currentTurnState = TurnStates.TreasureCollected;
+
+				Debug.Log("collecting treasure, with value " + currentTreasure.value);
 			}
 			else 
 			{
@@ -837,8 +856,7 @@ namespace Tabletop
 			{
 				throw new System.Exception("current location has treasure.");
 			}
-			else if (currentPlayer.collectedTreasures.ElementAt(collectedTreasureIndex)
-					 == null)
+			else if (currentPlayer.collectedTreasures.ElementAt(collectedTreasureIndex) == null)
 			{
 				throw new System.Exception("no collected treasure at this index");
 			}

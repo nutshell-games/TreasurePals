@@ -10,6 +10,7 @@ public class GameStateManager : MonoBehaviour {
 	public StateMachine stateMachine = new StateMachine();
 	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
 
+
 	public Submarine subScript; //submarine script..controls submarine animations, contains list of Player UI elements
 	public MenuManager Menu; // Menu's script
 
@@ -20,9 +21,9 @@ public class GameStateManager : MonoBehaviour {
 			Destroy (this);
 	}
 
+
 	// Update is called once per frame
 	void Update () {
-
 		if (Input.GetKeyDown ("l")) {
 			OpeningSequence ();
 		}
@@ -137,12 +138,14 @@ public class GameStateManager : MonoBehaviour {
 	IEnumerator OpenNumPlayerMenuWithDelay (){
 		Debug.LogError ("Opening menus in 3 seconds");
 		yield return new WaitForSeconds (3.0f);
+		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.setting);
 		//subScript.DisableBubbles ();
 		Menu.OpenNumberOfPlayer ();
 	}
 
 	//Adds num number of players and add to statemachine
 	public void SetNumPlayers(int num){
+		selectedPlayers.Clear ();
 		switch (num) {
 		case 6:
 			selectedPlayers.Add (PlayerColors.Red);
@@ -172,8 +175,6 @@ public class GameStateManager : MonoBehaviour {
 
 	}
 
-
-
 	public void SelectPlayerOrder(){
 		// number of players selected.
 		//move player selection menu away.
@@ -181,8 +182,10 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	public void StartFirstRound(){
+		
 		SetNumPlayers (2);
 		Menu.CloseMenus ();
+		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.game);
 		StartCoroutine (StartFirstRoundSequence ());
 		//animate submarine to the top,
 		//spawn divers = number of players while animating them.
@@ -197,32 +200,67 @@ public class GameStateManager : MonoBehaviour {
 
 	#region sequences - these are functions that may or may not be sensitive to "transitiions" or animations (so we can control the timing flow of the game)
 	IEnumerator StartFirstRoundSequence(){		
-		stateMachine.startNextRound ();
 		yield return StartCoroutine (subScript.subAnim.ComingToStop ());
 		yield return StartCoroutine (StartRoundSequence ());
 	}
 
+	IEnumerator EndRoundSequence(){		
+		Debug.LogError ("Ending Round");
+
+		//animate stuff here
+		//close all treasures.
+		//close sub.
+		//destroy player placeholders that are in sub
+		//animate player not in subs
+		subScript.ToggleDisplayAir(false);
+		yield return StartCoroutine(subScript.DestroyAllDivers());
+		yield return StartCoroutine (TreasurePlaceholderManager.instance.DestroyAllTreasurePlaceHolder ());
+
+		yield return StartCoroutine (StartRoundSequence ());
+	}
+
 	IEnumerator StartRoundSequence(){
-		//unboards divers 
-		//start turn sequence
+
+		stateMachine.startNextRound ();
+		Debug.LogError ("Current Gamestate :" + stateMachine.currentGameState);
+		yield return new WaitForSeconds (0.1f);
+		if (stateMachine.currentGameState == GameStates.GameHasWinner || stateMachine.currentGameState == GameStates.GameIsDraw) {
+			StartCoroutine (EndGameSequence ());
+		} else {
+			//unboards divers 
+			//start turn sequence
+			yield return StartCoroutine (subScript.UnloadDivers (stateMachine.numberOfPlayers));
+			yield return new WaitForSeconds (0.1f);
+			TreasurePlaceholderManager.instance.TreasurePlaceholderPlacement ();
+			subScript.ToggleDisplayAir (true);
+			StartCoroutine (StartTurnSequence ());
+		}
+	}
+
+	IEnumerator EndGameSequence(){
 		yield return new WaitForSeconds (1.0f);
-		yield return StartCoroutine(subScript.UnloadDivers (stateMachine.numberOfPlayers));
-		yield return new WaitForSeconds (1.0f);
-		TreasureManager.instance.TreasurePlacement ();
-		StartCoroutine(StartTurnSequence ());
+		Debug.LogError ("GAME OVER!");
+		Menu.OpenEndGameMenu ();
 	}
 
 	IEnumerator StartTurnSequence(){
 		Debug.LogError ("Beginning new turn");
-		stateMachine.startNextTurn ();
-		//determines whether or not to open menu
-		if (stateMachine.isCurrentPlayerDiving() && stateMachine.currentPlayer.collectedTreasures.Count>0) { // if player is DIVING and POSSES treasures,
-			Menu.OpenGoUpOrDown(); //player input calls Button_Direction
-		}
-		else { //if player is NOT diving do this
-			StartCoroutine(DirectionNotificationSequence());
-		}
 
+		if (stateMachine.currentRoundState == RoundStates.RoundEnded) {
+			yield return StartCoroutine (EndRoundSequence ());
+		} 
+		else {
+			
+			//if we can still go, continue, if not start new round sequence;
+			Menu.ToggleScrollControl(true);
+			stateMachine.startNextTurn ();
+			//determines whether or not to open menu
+			if (stateMachine.isCurrentPlayerDiving () && stateMachine.currentPlayer.collectedTreasures.Count > 0) { // if player is DIVING and POSSES treasures,
+				Menu.OpenGoUpOrDown (); //player input calls Button_Direction
+			} else { //if player is NOT diving do this
+				yield return StartCoroutine (DirectionNotificationSequence ());
+			}
+		}
 		yield return null;
 		//show its a player's turn,
 		//pause,
@@ -250,7 +288,6 @@ public class GameStateManager : MonoBehaviour {
 		//show roll dice menu
 		//show dice value
 		//show Move direction menu,
-		Debug.LogError("Moving!");
 		StartCoroutine(MoveSequence ());
 		yield return null;
 	}
@@ -260,9 +297,9 @@ public class GameStateManager : MonoBehaviour {
 		Debug.LogError("Player took treasure? " + t);
 		stateMachine.selectTreasure (t);
 		if (t) {
-			TreasureManager.instance.RemoveTreasure (stateMachine.currentPlayer.currentPosition);
+			TreasurePlaceholderManager.instance.RemoveTreasureFromLocation ();
 		}
-		yield return new WaitForSeconds (1.0f);
+		yield return new WaitForSeconds (0.1f);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
 	}
@@ -280,10 +317,18 @@ public class GameStateManager : MonoBehaviour {
 
 	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
 	IEnumerator DestinationReachedSequence(){
-		yield return new WaitForSeconds (1.0f);
-		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure
-			Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
-		} else {
+		yield return new WaitForSeconds (0.1f);
+		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure		
+			
+			if (stateMachine.currentPlayer.currentPosition == stateMachine.treasureLocations.Count - 1) {
+				StartCoroutine (GetTreasureSequence (true));
+			}
+			else
+				Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
+
+
+		} 
+		else {
 			if (stateMachine.currentPlayer.collectedTreasures.Count > 0) {// //if there is no treasure and player have treasure
 				Debug.LogError("Do you want to drop your treasure?");
 				Menu.OpenDropTreasure ();//player input calls Button_DropTreasure
@@ -293,38 +338,50 @@ public class GameStateManager : MonoBehaviour {
 			//theres no treasure
 		}
 		yield return null;
-
 	}
-
-
-
-	IEnumerator ReturnTreasureSequence(int treasureIndex){
+		
+	IEnumerator ReturnTreasureSequence(int myTreasureIndex, TreasureType type){
+		Debug.LogError ("Returning Treasure");
+		stateMachine.returnTreasure (myTreasureIndex);
+		Debug.LogError ("Returned Treasure..");
+		TreasurePlaceholderManager.instance.PutTreasureBack (myTreasureIndex, type);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
-
-
 		//animates treasure going from player to "empty" treasure location
 		
 	}
 
-	IEnumerator EndTurnSequence(){
+	IEnumerator DontDropTreasureSequence(){
+		
+		StartCoroutine (EndTurnSequence ());
+		
+		yield return null;
+	}
 
+	IEnumerator EndTurnSequence(){
 		Debug.LogError (stateMachine.currentTurnState);
 		Debug.LogError ("End turn");
+		Menu.ToggleScrollControl (false);
 		stateMachine.endTurn ();
-		Debug.LogError ("Beginning new turn");
-		yield return new WaitForSeconds(2.0f);
+		yield return new WaitForSeconds(0.1f);
 		StartCoroutine (StartTurnSequence ());
 		//animates ending turn
 		//>  Start Turn Sequence
 	}
+
+	IEnumerator RestartGameSequence(){
+		Debug.LogError ("Starting new game");
+		yield return new WaitForSeconds (.1f);
+		StartFirstRound ();
+	}
+
 	#endregion
 
 
 
 
 
-	#region these are used for UI BUTTONS
+	#region buttons - these are used for UI BUTTONS
 	//USER CHOOSE TO GO  UP OR DOWN
 	public void Button_Direction(bool t){
 		if (t) {
@@ -339,8 +396,21 @@ public class GameStateManager : MonoBehaviour {
 		StartCoroutine(GetTreasureSequence (t));
 	}
 
-	public void Button_DropTreasure(int treasureIndex){
-		StartCoroutine (ReturnTreasureSequence (treasureIndex));
+	public void Button_DropTreasure(int myTreasureIndex, TreasureType type){
+		Debug.LogError ("Drop Treasure!");
+		StartCoroutine (ReturnTreasureSequence (myTreasureIndex, type));
+	}
+
+	public void Button_DontDropTreasure(){
+		StartCoroutine (DontDropTreasureSequence ());
+	}
+
+	public void Button_RestartGame(){
+		StartCoroutine (RestartGameSequence ());
+	}
+
+	public void Button_QuitGame(){
+		Application.Quit ();
 	}
 	#endregion
 

@@ -8,7 +8,7 @@ namespace Tabletop
 	public class Player
 	{
 
-		public int currentPosition = 0;
+		public int currentPosition = -1;
 		public PlayerColors color;
 		//public bool isDiving = true;
 		public PlayerStates state = PlayerStates.LeavingShip;
@@ -31,6 +31,7 @@ namespace Tabletop
 			Debug.Log ("Putting treasure Away!");
 			capturedTreasures = new List<Treasure>(collectedTreasures);
 			collectedTreasures.Clear();
+			Debug.LogError ("My collected treasure is now " + collectedTreasures.Count);
 			Debug.Log ("treasure is put Away!");
 		}
 
@@ -50,8 +51,9 @@ namespace Tabletop
 
 		public void reset()
 		{
-			currentPosition = 0;
+			currentPosition = -1;
 			state = PlayerStates.LeavingShip;
+			collectedTreasures.Clear ();
 		}
 	}
 }
