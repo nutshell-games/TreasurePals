@@ -19,20 +19,21 @@ public class OxygenMenu : MonoBehaviour {
 	[SerializeField]
 	private bool MenuOpen = false;
 	// Use this for initialization
-	
+
+	public bool EnableAnimate;
+
 	// Update is called once per frame
 	void Update () {
-		UpdateMenu ();
+		if (EnableAnimate) {
+			UpdateMenu ();
+		}
 	}
 
 	void UpdateMenu(){
-		Debug.LogError (ContentTransform.offsetMax);
 		if (ContentTransform.offsetMax.y >= TopThreshold) {
-			Debug.LogError ("Show menu");
 			ShowMenu ();
 		} else {
 			HideMenu ();
-			Debug.LogError ("menu hidden");
 		}
 	}
 

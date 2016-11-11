@@ -68,7 +68,7 @@ namespace Tabletop
 		int[][] startingTreasures;
 
 		public List<Player> players;
-		public Dictionary<PlayerColors,Player> playersByColor;
+		public Dictionary<PlayerColors,Player> playersByColor = new Dictionary<PlayerColors,Player>();
 
 		public GameStates currentGameState;
 
@@ -114,8 +114,8 @@ namespace Tabletop
 		// GAME SETUP
 		//===========
 
-		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers  ) {
-
+		public void setupGameForPlayers ( List<PlayerColors> selectedPlayers) {
+			numberOfPlayers = selectedPlayers.Count;
 			Debug.Log ("setupGameForPlayers");
 
 			foreach (PlayerColors playerColor in selectedPlayers) {
@@ -526,10 +526,10 @@ namespace Tabletop
 
 		public void endTurn()
 		{
-
 			if (currentTurnState != TurnStates.TreasurePassed &&
 				currentTurnState != TurnStates.TreasureCollected &&
-				currentTurnState != TurnStates.TreasureUnavailable)
+				currentTurnState != TurnStates.TreasureUnavailable &&
+				currentTurnState != TurnStates.PlayerMoved)
 			{
 				throw new System.Exception("Player has not resolved treasure collection.");
 			}
@@ -597,8 +597,8 @@ namespace Tabletop
 			return roll1 + roll2;
 		}
 
-		public void setCurrentPlayerRoll (int rollValue) {
-
+		public void setCurrentPlayerRoll () {
+			int rollValue = lastRoll;
 			if (currentTurnState != TurnStates.PlayerRolling) {
 				throw new System.Exception ("Player roll is not pending.");
 			}
@@ -663,17 +663,20 @@ namespace Tabletop
 					if (player.state == PlayerStates.ReturnedToShip) playersInShip++;
 				}
 
-				if (playersInShip == players.Count)
+				if (playersInShip == players.Count)//pass command to game state manager later, so we can animate the end round.
 				{
 					Debug.Log("all players returned to ship");
+					currentTurnState = TurnStates.PlayerMoved;
 					endRound();
 					return;
 				}
 
-				if (getTreasureAtCurrentPlayerLocation ()) {
-					currentTurnState = TurnStates.TreasureAvailable;
-				} else {
-					currentTurnState = TurnStates.TreasureUnavailable;
+				if (currentPlayer.currentPosition >= 0) {
+					if (getTreasureAtCurrentPlayerLocation ()) {
+						currentTurnState = TurnStates.TreasureAvailable;
+					} else {
+						currentTurnState = TurnStates.TreasureUnavailable;
+					} 
 				}
 
 			} else {
@@ -722,18 +725,20 @@ namespace Tabletop
 
 					Debug.Log("new position: " + currentPlayer.currentPosition);
 
-					// player reached end of treasure locations
+					// player reached end of treasure locations  
 					if (currentPlayer.currentPosition >= treasureLocations.Count)
 					{
 						distanceToMove = 0;
-						currentPlayer.placeInShip();
+						currentPlayer.returnToShip();
 						break;
 					}
 
 					else if (currentPlayer.currentPosition <= 0)
 					{
 						distanceToMove = 0;
-						currentPlayer.returnToShip();
+						Debug.Log ("Exiting While loop");
+						currentPlayer.placeInShip();
+						currentTurnState = TurnStates.PlayerMoved;
 						break;
 					}
 
@@ -758,10 +763,12 @@ namespace Tabletop
 				}
 
 			}
-
-			TreasureLocation locationAfterMovement = treasureLocations[currentPlayer.currentPosition];
-			locationAfterMovement.player = currentPlayer;
-
+			if (currentPlayer.currentPosition >= 0) {
+				Debug.Log ("Current Player position is " + currentPlayer.currentPosition);
+				TreasureLocation locationAfterMovement = treasureLocations [currentPlayer.currentPosition];
+				locationAfterMovement.player = currentPlayer;
+			}
+			Debug.Log ("Finished Moving");
 			return movementHistory;
 		}
 
