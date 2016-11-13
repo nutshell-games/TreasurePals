@@ -706,11 +706,13 @@ namespace Tabletop
 			Debug.Log("applyMovementForCurrentPlayer "+ currentPlayer.color +
 			          " currentPosition: "+currentPlayer.currentPosition+
 			          " distance:" + distanceToMove + "state:" + currentPlayer.state);
+
 			Debug.LogError ("Maximum Treasure location is " + treasureLocations.Count);
 			//clear current location space of player
 			if (currentPlayer.currentPosition != -1) {
 				treasureLocations [currentPlayer.currentPosition].player = null;
 			}
+
 			if (currentPlayer.state == PlayerStates.LeavingShip)
 			{
 				currentPlayer.state = PlayerStates.Diving;
