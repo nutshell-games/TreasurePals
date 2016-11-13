@@ -324,7 +324,7 @@ public class GameStateManager : MonoBehaviour {
 				StartCoroutine (GetTreasureSequence (true));
 			}
 			else
-				Menu.OpenYesNoTreasure (); //player input calls Button_GetTreasure
+				Menu.OpenYesNoTreasure (stateMachine.treasureLocations [stateMachine.currentPlayer.currentPosition].treasure); //player input calls Button_GetTreasure
 
 
 		} 

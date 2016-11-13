@@ -130,11 +130,13 @@ namespace Tabletop
 			lastRoll = 0;
 			winner = null;
 			firstPlayer = 0;
+			players = new List<Player> ();
 			treasureCapturedReport = new Dictionary<PlayerColors, List<Treasure>> ();
 			playersByColor =new Dictionary<PlayerColors,Player> ();
 			treasureScoredReport = new List<ScoreReport>();
 			treasureCollected = new Stack<Treasure> ();
 			treasureCaptured = new List<Treasure> ();
+
 			foreach (PlayerColors playerColor in selectedPlayers) {				
 				treasureCapturedReport.Add (playerColor, new List<Treasure> ());
 				playersByColor.Add(playerColor, spawnPlayer(playerColor));

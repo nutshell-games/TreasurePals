@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
-
+using Tabletop;
 public class MenuManager : MonoBehaviour {
 	[SerializeField]
 	private Animator numPlayerAnim;
@@ -66,8 +66,8 @@ public class MenuManager : MonoBehaviour {
 		DropTreasure.SetActive (true);
 	}
 
-	public void OpenYesNoTreasure(){
-		
+	public void OpenYesNoTreasure(Treasure t){
+		YesOrNoTreasure.GetComponent<TreasurePlaceholderPrefab> ().SetTreasurePrefabTo (t.type);
 		YesOrNoTreasure.SetActive (true);
 	}
 

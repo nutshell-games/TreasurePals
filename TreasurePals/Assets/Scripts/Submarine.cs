@@ -81,6 +81,7 @@ public class Submarine : MonoBehaviour {
 	/// <param name="diverIndex">Diver index.</param>
 	/// <param name="locationIndex">Location index.</param>
 	public void MoveDiverToSpot(int diverIndex, int locationIndex){
+		Debug.LogError ("diver index is " + diverIndex + " Location index is: " + locationIndex);
 		if (locationIndex == -1) {
 			subAnim.MoveDiverTo (ListOfDivers [diverIndex], subAnim.subScript.transform);
 		} else {
