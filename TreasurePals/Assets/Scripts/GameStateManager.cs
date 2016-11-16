@@ -5,7 +5,6 @@ using System;
 using Tabletop;
 
 public class GameStateManager : MonoBehaviour {
-
 	// Use this for initialization
 	void Start () {
 	
