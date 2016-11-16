@@ -5,19 +5,12 @@ using System;
 using Tabletop;
 
 public class GameStateManager : MonoBehaviour {
-<<<<<<< HEAD
-	// Use this for initialization
-	void Start () {
-	
-	}
 
-	void Awake() {
-=======
+
 	public static GameStateManager instance;
 
 	public StateMachine stateMachine = new StateMachine();
 	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
->>>>>>> 43f7e8def83caa25703259a980a23a9c8e425feb
 
 	public int numberOfPlayers = 2;
 	public Submarine subScript; //submarine script..controls submarine animations, contains list of Player UI elements
