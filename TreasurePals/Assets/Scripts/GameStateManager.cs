@@ -10,16 +10,19 @@ public class GameStateManager : MonoBehaviour {
 	public StateMachine stateMachine = new StateMachine();
 	List<PlayerColors> selectedPlayers = new List<PlayerColors> ();
 
-
+	public int numberOfPlayers = 2;
 	public Submarine subScript; //submarine script..controls submarine animations, contains list of Player UI elements
 	public MenuManager Menu; // Menu's script
 
 	void Awake() {
+		Screen.SetResolution (600, 900, true);
 		if (instance == null) {
 			instance = this;
 		} else
 			Destroy (this);
 	}
+
+	public float transitionDelay = 0.5f;
 
 
 	// Update is called once per frame
@@ -143,6 +146,10 @@ public class GameStateManager : MonoBehaviour {
 		Menu.OpenNumberOfPlayer ();
 	}
 
+	public void SetNumberOfPlayers(int num){
+		numberOfPlayers = num;
+	}
+
 	//Adds num number of players and add to statemachine
 	public void SetNumPlayers(int num){
 		selectedPlayers.Clear ();
@@ -183,7 +190,7 @@ public class GameStateManager : MonoBehaviour {
 
 	public void StartFirstRound(){
 		
-		SetNumPlayers (2);
+		SetNumPlayers (numberOfPlayers);
 		Menu.CloseMenus ();
 		BackGroundMusicManager.instance.SetBGM (BackGroundMusicManager.BGMType.game);
 		StartCoroutine (StartFirstRoundSequence ());
@@ -200,6 +207,7 @@ public class GameStateManager : MonoBehaviour {
 
 	#region sequences - these are functions that may or may not be sensitive to "transitiions" or animations (so we can control the timing flow of the game)
 	IEnumerator StartFirstRoundSequence(){		
+		yield return new WaitForSeconds (transitionDelay);
 		yield return StartCoroutine (subScript.subAnim.ComingToStop ());
 		yield return StartCoroutine (StartRoundSequence ());
 	}
@@ -213,6 +221,7 @@ public class GameStateManager : MonoBehaviour {
 		//destroy player placeholders that are in sub
 		//animate player not in subs
 		subScript.ToggleDisplayAir(false);
+		yield return new WaitForSeconds (transitionDelay);
 		yield return StartCoroutine(subScript.DestroyAllDivers());
 		yield return StartCoroutine (TreasurePlaceholderManager.instance.DestroyAllTreasurePlaceHolder ());
 
@@ -223,7 +232,7 @@ public class GameStateManager : MonoBehaviour {
 
 		stateMachine.startNextRound ();
 		Debug.LogError ("Current Gamestate :" + stateMachine.currentGameState);
-		yield return new WaitForSeconds (0.1f);
+		yield return new WaitForSeconds (transitionDelay);
 		if (stateMachine.currentGameState == GameStates.GameHasWinner || stateMachine.currentGameState == GameStates.GameIsDraw) {
 			StartCoroutine (EndGameSequence ());
 		} else {
@@ -238,13 +247,14 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	IEnumerator EndGameSequence(){
-		yield return new WaitForSeconds (1.0f);
+		yield return new WaitForSeconds (transitionDelay);
 		Debug.LogError ("GAME OVER!");
 		Menu.OpenEndGameMenu ();
 	}
 
 	IEnumerator StartTurnSequence(){
 		Debug.LogError ("Beginning new turn");
+		yield return new WaitForSeconds (transitionDelay);
 
 		if (stateMachine.currentRoundState == RoundStates.RoundEnded) {
 			yield return StartCoroutine (EndRoundSequence ());
@@ -269,6 +279,7 @@ public class GameStateManager : MonoBehaviour {
 
 	//DISPLAYS WHICH DIRECTION THE PLAYER IS GOING
 	IEnumerator DirectionNotificationSequence(){  
+		yield return new WaitForSeconds (transitionDelay);
 		if (stateMachine.isCurrentPlayerDiving()) {
 			//display notification that player is decending
 			Debug.LogError ("I'm GOING DOWN");
@@ -283,6 +294,7 @@ public class GameStateManager : MonoBehaviour {
 
 	//ROLLS THE DICE, EITHER BY CODE OR BY PLAYER INTERACTION
 	IEnumerator RollDiceSequence(){
+		yield return new WaitForSeconds (transitionDelay);
 		stateMachine.rollForCurrentPlayer();
 		stateMachine.setCurrentPlayerRoll ();
 		//show roll dice menu
@@ -299,25 +311,29 @@ public class GameStateManager : MonoBehaviour {
 		if (t) {
 			TreasurePlaceholderManager.instance.RemoveTreasureFromLocation ();
 		}
-		yield return new WaitForSeconds (0.1f);
+		yield return new WaitForSeconds (transitionDelay);
 		StartCoroutine (EndTurnSequence ());
 		yield return null;
 	}
 
 	//MOVE PLAYER TO DESTINATION WITH ANIMATION  ** CURRENTLY DOES NOT ACCOUNT FOR RETURNING TO SHIP**
 	IEnumerator MoveSequence(){
+		yield return new WaitForSeconds (transitionDelay);
+		Menu.ToggleScrollControl (false);
 		stateMachine.commitMovement();
 		Debug.LogError ("Moving character  " + stateMachine.currentPlayerIndex + " to Treasure location " + stateMachine.currentPlayer.currentPosition);
 		subScript.MoveDiverToSpot (stateMachine.currentPlayerIndex, stateMachine.currentPlayer.currentPosition);
 		//animates player to move 1 space at a time going down
 		//when player stops, open TreasurePrompt menu
-		StartCoroutine(DestinationReachedSequence());
+
+
+		StartCoroutine(FinishedMovingSequence());
 		yield return null;
 	}
 
 	//WHEN PLAYER REACHES TREASURE SPOT, DO THIS 
-	IEnumerator DestinationReachedSequence(){
-		yield return new WaitForSeconds (0.1f);
+	IEnumerator FinishedMovingSequence(){
+		yield return new WaitForSeconds (transitionDelay);
 		if (stateMachine.currentTurnState == TurnStates.TreasureAvailable) {// open yes or no menu if there is treasure		
 			
 			if (stateMachine.currentPlayer.currentPosition == stateMachine.treasureLocations.Count - 1) {
@@ -337,10 +353,12 @@ public class GameStateManager : MonoBehaviour {
 			}
 			//theres no treasure
 		}
+		Menu.ToggleScrollControl (true);
 		yield return null;
 	}
 		
 	IEnumerator ReturnTreasureSequence(int myTreasureIndex, TreasureType type){
+		yield return new WaitForSeconds (transitionDelay);
 		Debug.LogError ("Returning Treasure");
 		stateMachine.returnTreasure (myTreasureIndex);
 		Debug.LogError ("Returned Treasure..");
@@ -352,6 +370,7 @@ public class GameStateManager : MonoBehaviour {
 	}
 
 	IEnumerator DontDropTreasureSequence(){
+		yield return new WaitForSeconds (transitionDelay);
 		
 		StartCoroutine (EndTurnSequence ());
 		
@@ -363,7 +382,7 @@ public class GameStateManager : MonoBehaviour {
 		Debug.LogError ("End turn");
 		Menu.ToggleScrollControl (false);
 		stateMachine.endTurn ();
-		yield return new WaitForSeconds(0.1f);
+		yield return new WaitForSeconds (transitionDelay);
 		StartCoroutine (StartTurnSequence ());
 		//animates ending turn
 		//>  Start Turn Sequence
@@ -371,7 +390,7 @@ public class GameStateManager : MonoBehaviour {
 
 	IEnumerator RestartGameSequence(){
 		Debug.LogError ("Starting new game");
-		yield return new WaitForSeconds (.1f);
+		yield return new WaitForSeconds (transitionDelay);
 		StartFirstRound ();
 	}
 
@@ -411,6 +430,10 @@ public class GameStateManager : MonoBehaviour {
 
 	public void Button_QuitGame(){
 		Application.Quit ();
+	}
+
+	public void Button_StartGame(){
+		OpeningSequence ();
 	}
 	#endregion
 
